@@ -15,6 +15,7 @@ jobs:
         run: |
           node --check js/app.js
           node --check js/export.js
+          node --check js/executive-pdf.js
           node --check js/quarter-filter.js
           node --check js/sidebar.js
           node --check tests/sidebar-layout-check.js
@@ -43,6 +44,7 @@ jobs:
           grep -q "./js/quarter-filter.js" index.html
           grep -q "./js/sidebar.js" index.html
           grep -q "./js/export.js" index.html
+          grep -q "./js/executive-pdf.js" index.html
           grep -q 'data-export="xlsx"' index.html
           grep -q 'data-export="pdf"' index.html
           grep -q 'data-export="csv"' index.html
@@ -50,6 +52,7 @@ jobs:
           test -s css/layout-fix.css
           test -s css/motion.css
           test -s js/export.js
+          test -s js/executive-pdf.js
           test -s js/quarter-filter.js
           test -s js/sidebar.js
           test -s scripts/watch_and_publish.py
