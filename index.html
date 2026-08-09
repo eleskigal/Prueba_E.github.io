@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#12375b">
+  <meta name="theme-color" content="#102a43">
   <title>DCD · Seguimiento de reportes</title>
   <link rel="stylesheet" href="./css/dashboard-v5.css">
 </head>
@@ -12,7 +12,7 @@
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div class="brand-mark">DCD</div>
-        <div><strong>Seguimiento</strong><span>Reportes institucionales</span></div>
+        <div><strong>Seguimiento</strong><span>Control de reportes</span></div>
       </div>
       <nav class="nav" aria-label="Navegación principal">
         <button class="nav-item active" data-view="resumen" aria-current="page"><span class="nav-icon">⌂</span><span>Resumen</span></button>
@@ -26,8 +26,8 @@
       <header class="topbar">
         <div>
           <div class="eyebrow">Dirección de Censos y Demografía</div>
-          <h1 id="page-title">Resumen de seguimiento</h1>
-          <p id="page-subtitle">Prioridades, instrumentos y próximos compromisos.</p>
+          <h1 id="page-title">Control de gestión</h1>
+          <p id="page-subtitle">Qué requiere atención, quién responde y cuál es el próximo hito.</p>
         </div>
         <div class="top-actions">
           <div class="updated"><span>Actualización</span><strong id="updated-at">—</strong></div>
@@ -36,23 +36,48 @@
       </header>
 
       <section id="view-resumen" class="view active">
+        <section class="command-hero panel">
+          <div class="command-copy">
+            <span class="section-kicker">Lectura ejecutiva</span>
+            <h2 id="hero-title">Cargando prioridades…</h2>
+            <p id="hero-copy">La vista prioriza compromisos por vencimiento, estado y cercanía de la fecha límite.</p>
+            <div class="hero-actions">
+              <button class="primary-btn" id="hero-primary">Ver prioridad</button>
+              <button class="secondary-btn" data-go="matriz" data-filter="attention">Abrir pendientes</button>
+            </div>
+          </div>
+          <div class="hero-metrics">
+            <div class="progress-orbit" id="progress-orbit"><div><strong id="hero-rate">—</strong><span>cumplimiento</span></div></div>
+            <div class="hero-next"><span>Próximo vencimiento</span><strong id="hero-next-date">—</strong><small id="hero-next-label">Sin información</small></div>
+          </div>
+        </section>
+
         <div class="kpi-grid" id="summary-kpis"></div>
-        <div class="dashboard-grid">
-          <section class="panel panel-wide">
-            <div class="panel-head"><div><span class="section-kicker">Atención inmediata</span><h2>Alertas prioritarias</h2></div><button class="text-action" data-go="matriz" data-filter="attention">Ver todas →</button></div>
-            <div id="priority-alerts" class="alert-list"></div>
+
+        <div class="strategy-grid">
+          <section class="panel priority-panel">
+            <div class="panel-head"><div><span class="section-kicker">Atención inmediata</span><h2>Prioridades operativas</h2></div><button class="text-action" data-go="matriz" data-filter="attention">Ver todas →</button></div>
+            <div id="priority-alerts" class="priority-stack"></div>
           </section>
-          <section class="panel">
-            <div class="panel-head"><div><span class="section-kicker">Próximos 30 días</span><h2>Agenda de vencimientos</h2></div><button class="text-action" data-go="calendario">Calendario →</button></div>
+
+          <section class="panel instruments-panel">
+            <div class="panel-head"><div><span class="section-kicker">Cobertura</span><h2>Instrumentos</h2></div><span class="panel-hint">Selecciona para filtrar</span></div>
+            <div id="instrument-map" class="instrument-map"></div>
+          </section>
+
+          <section class="panel upcoming-panel">
+            <div class="panel-head"><div><span class="section-kicker">Próximos 30 días</span><h2>Hitos próximos</h2></div><button class="text-action" data-go="calendario">Calendario →</button></div>
             <div id="upcoming-list" class="mini-timeline"></div>
           </section>
-          <section class="panel">
-            <div class="panel-head"><div><span class="section-kicker">Portafolio</span><h2>Estado de los reportes</h2></div></div>
-            <div id="status-breakdown" class="status-breakdown"></div>
-          </section>
-          <section class="panel panel-wide">
-            <div class="panel-head"><div><span class="section-kicker">Gestión</span><h2>Carga por responsable</h2></div></div>
+
+          <section class="panel owners-panel">
+            <div class="panel-head"><div><span class="section-kicker">Carga y riesgo</span><h2>Responsables</h2></div><span class="panel-hint">Abiertos / total</span></div>
             <div id="owner-load" class="owner-load"></div>
+          </section>
+
+          <section class="panel status-panel">
+            <div class="panel-head"><div><span class="section-kicker">Portafolio</span><h2>Estado de los reportes</h2></div><span class="panel-hint">Haz clic para filtrar</span></div>
+            <div id="status-breakdown" class="status-breakdown"></div>
           </section>
         </div>
       </section>
