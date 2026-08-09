@@ -34,6 +34,7 @@ PUBLIC_COLUMNS = {
     "Fecha de Entrega Interna": "fecha_entrega_interna",
     "Fecha de Entrega Solicitante": "fecha_entrega_solicitante",
     "Estado del Reporte": "estado_fuente",
+    "Enlaces": "evidencia_url",
     "Observaciones": "observaciones",
 }
 
@@ -92,7 +93,6 @@ def validate(df):
 
 def build_records(df):
     records = []
-    # header=1 implica que la primera fila de datos corresponde a la fila 3 de Excel.
     for idx, row in df.iterrows():
         excel_row = int(idx) + 3
         if not is_operational(row):
@@ -101,10 +101,18 @@ def build_records(df):
         for source, target in PUBLIC_COLUMNS.items():
             value = row.get(source)
             record[target] = iso_date(value) if source in DATE_COLUMNS else clean(value)
+
         record["nombre_reporte"] = None if record["nombre_reporte"] is None else str(record["nombre_reporte"])
         record["estado_fuente"] = record["estado_fuente"] or "Sin estado"
-        # El enlace no se publica en GitHub; solo se informa su existencia.
-        record["evidencia_disponible"] = clean(row.get("Enlaces")) is not None
+
+        # Campos semánticos explícitos para la interfaz.
+        record["instrumento"] = record["tipo_actividad"]
+        record["accion"] = record["nombre_reporte"]
+        record["accion_descripcion"] = record["descripcion"]
+
+        # Los enlaces de evidencia se conservan. El control de acceso continúa
+        # en SharePoint/OneDrive u otro sistema de origen; el visor no evade permisos.
+        record["evidencia_disponible"] = record["evidencia_url"] is not None
         records.append(record)
     return records
 
@@ -129,7 +137,7 @@ def main():
         "source_file": INPUT.name,
         "source_sheet": SHEET,
         "records": len(records),
-        "privacy": "No se publican Usuario Reportado ni URLs de Enlaces; evidencia_disponible solo indica existencia.",
+        "privacy": "Usuario Reportado no se publica. Los enlaces de evidencia se conservan y mantienen el control de acceso del sistema de origen.",
     }
     META.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"OK · {len(records)} registros exportados a {OUTPUT}")
