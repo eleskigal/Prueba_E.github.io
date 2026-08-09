@@ -1,0 +1,5 @@
+[
+  {"id":"RPT-001","tipo":"Plan Nacional de Desarrollo","tema":"Seguimiento PND","plataforma":"SINERGIA","responsable":"Juliana Melo","periodicidad":"Mensual","fecha_interna":"2026-08-11","fecha_limite":"2026-08-12","fecha_entrega":null,"estado_fuente":"Pendiente","evidencia":null,"observaciones":"Validar información antes del envío."},
+  {"id":"RPT-002","tipo":"CONPES","tema":"Seguimiento compromisos CONPES","plataforma":"Herramienta interna","responsable":"Enlaces GIT","periodicidad":"Mensual","fecha_interna":"2026-08-14","fecha_limite":"2026-08-15","fecha_entrega":null,"estado_fuente":"Pendiente","evidencia":null,"observaciones":"Consolidar soportes."},
+  {"id":"RPT-003","tipo":"Riesgos","tema":"Reporte de riesgos","plataforma":"OPLAN","responsable":"Sebastián Romero","periodicidad":"Mensual","fecha_interna":"2026-08-20","fecha_limite":"2026-08-22","fecha_entrega":"2026-08-08","estado_fuente":"Entregado","evidencia":"https://example.com","observaciones":"Entrega registrada para prueba."}
+]
