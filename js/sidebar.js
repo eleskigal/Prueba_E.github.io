@@ -12,22 +12,24 @@
   const style = document.createElement('style');
   style.textContent = `
     .sidebar-controls{display:flex;gap:6px;position:absolute;top:12px;right:10px;z-index:4}
-    .sidebar-control{width:30px;height:30px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.78);display:grid;place-items:center;cursor:pointer}
-    .sidebar-control:hover{background:rgba(255,255,255,.12);color:#fff}
+    .sidebar-control{width:30px;height:30px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.78);display:grid;place-items:center;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms ease,transform 120ms cubic-bezier(.22,1,.36,1)}
+    .sidebar-control:hover{background:rgba(255,255,255,.12);color:#fff;transform:translate3d(0,-1px,0)}
     .sidebar-control:focus-visible,.sidebar-reveal:focus-visible{outline:2px solid #d2a856;outline-offset:2px}
     .sidebar-pin svg,.sidebar-hide svg,.sidebar-reveal svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
     .sidebar-pin.is-pinned{color:#d2a856;background:rgba(210,168,86,.10);border-color:rgba(210,168,86,.28)}
-    .sidebar-reveal{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:46;width:36px;height:54px;border:1px solid rgba(255,255,255,.72);border-left:0;border-radius:0 13px 13px 0;background:rgba(255,255,255,.68);color:#163b5c;display:none;place-items:center;cursor:pointer;box-shadow:0 12px 34px rgba(20,45,62,.10),inset 0 1px 0 rgba(255,255,255,.86);backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%)}
-    .sidebar-overlay-backdrop{display:none;position:fixed;inset:0;z-index:39;background:rgba(15,29,40,.13);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+    .sidebar-reveal{position:fixed;left:0;top:50%;transform:translate3d(0,-50%,0);z-index:46;width:36px;height:54px;border:1px solid rgba(255,255,255,.72);border-left:0;border-radius:0 13px 13px 0;background:rgba(255,255,255,.76);color:#163b5c;display:none;place-items:center;cursor:pointer;box-shadow:0 8px 22px rgba(20,45,62,.08);backdrop-filter:blur(10px) saturate(112%);-webkit-backdrop-filter:blur(10px) saturate(112%);transition:transform 120ms cubic-bezier(.22,1,.36,1),background 120ms ease;will-change:transform}
+    .sidebar-reveal:hover{transform:translate3d(2px,-50%,0);background:rgba(255,255,255,.88)}
+    .sidebar-overlay-backdrop{display:none;position:fixed;inset:0;z-index:39;background:rgba(15,29,40,.10);opacity:0;transition:opacity 160ms ease}
     @media(min-width:901px){
       body.sidebar-collapsed .app-shell{display:block!important;max-width:none!important;width:100%!important;min-height:100vh}
       body.sidebar-collapsed .main{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding-left:clamp(28px,3vw,52px);padding-right:clamp(28px,3vw,52px)}
-      body.sidebar-collapsed .sidebar{position:fixed!important;left:0;top:0;width:214px;height:100vh;transform:translateX(-104%);transition:transform 210ms cubic-bezier(.2,.8,.2,1);box-shadow:18px 0 52px rgba(11,30,45,.16);z-index:45}
-      body.sidebar-collapsed.sidebar-peek .sidebar{transform:translateX(0)}
+      body.sidebar-collapsed .sidebar{position:fixed!important;left:0;top:0;width:214px;height:100vh;transform:translate3d(-104%,0,0);transition:transform 180ms cubic-bezier(.22,1,.36,1);box-shadow:14px 0 34px rgba(11,30,45,.12);z-index:45;will-change:transform;contain:layout paint}
+      body.sidebar-collapsed.sidebar-peek .sidebar{transform:translate3d(0,0,0)}
       body.sidebar-collapsed:not(.sidebar-peek) .sidebar-reveal{display:grid}
-      body.sidebar-collapsed.sidebar-peek .sidebar-overlay-backdrop{display:block}
+      body.sidebar-collapsed.sidebar-peek .sidebar-overlay-backdrop{display:block;opacity:1}
     }
     @media(max-width:900px){.sidebar-controls,.sidebar-reveal,.sidebar-overlay-backdrop{display:none!important}}
+    @media(prefers-reduced-motion:reduce){.sidebar,.sidebar-control,.sidebar-reveal,.sidebar-overlay-backdrop{transition:none!important}}
   `;
   document.head.appendChild(style);
 
@@ -74,19 +76,19 @@
     pinned = next;
     overlayOpen = false;
     localStorage.setItem(STORAGE_KEY, String(pinned));
-    sync();
+    requestAnimationFrame(sync);
   }
 
   pinButton.addEventListener('click', () => setPinned(!pinned));
-  hideButton.addEventListener('click', () => pinned ? setPinned(false) : (overlayOpen = false, sync()));
-  reveal.addEventListener('click', () => { overlayOpen = true; sync(); });
-  backdrop.addEventListener('click', () => { overlayOpen = false; sync(); });
+  hideButton.addEventListener('click', () => pinned ? setPinned(false) : (overlayOpen = false, requestAnimationFrame(sync)));
+  reveal.addEventListener('click', () => { overlayOpen = true; requestAnimationFrame(sync); });
+  backdrop.addEventListener('click', () => { overlayOpen = false; requestAnimationFrame(sync); });
   sidebar.querySelectorAll('.nav-item').forEach((item) => item.addEventListener('click', () => {
-    if (!pinned && isDesktop()) { overlayOpen = false; sync(); }
+    if (!pinned && isDesktop()) { overlayOpen = false; requestAnimationFrame(sync); }
   }));
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && overlayOpen) { overlayOpen = false; sync(); reveal.focus(); }
+    if (e.key === 'Escape' && overlayOpen) { overlayOpen = false; requestAnimationFrame(sync); reveal.focus(); }
   });
-  window.addEventListener('resize', sync);
+  window.addEventListener('resize', sync, { passive: true });
   sync();
 })();
