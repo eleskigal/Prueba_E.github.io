@@ -4,24 +4,30 @@ Visor web de seguimiento de compromisos, reportes, instrumentos, responsables y 
 
 **Sitio publicado:** https://eleskigal.github.io/Prueba_E.github.io/
 
-> Este README es la guía operativa del proyecto. Antes de actualizar datos, modificar el frontend o publicar cambios, revisar las secciones **Actualizar la información**, **Controles de calidad** y **Reglas que no se deben romper**.
+> Este README es la guía operativa principal del proyecto. El procedimiento recomendado de actualización ya es **automático**: actualizar y guardar la matriz Excel local es suficiente para regenerar los datos y publicar el visor, siempre que la automatización esté instalada y activa.
 
 ---
 
 ## 1. Qué hace este proyecto
 
-El visor transforma una matriz maestra de Excel en una aplicación web estática desplegada con GitHub Pages.
+El proyecto transforma una matriz maestra de Excel en una aplicación web estática desplegada con GitHub Pages.
 
-El flujo general es:
+El flujo de producción actual es:
 
 ```text
 Matriz maestra Excel (local)
         ↓
+watcher local de Windows
+        ↓
 scripts/procesar_matriz.py
+        ↓
+validaciones de integridad y privacidad
         ↓
 data/reportes.json + data/metadata.json
         ↓
-HTML + CSS + JavaScript
+git commit + git push
+        ↓
+GitHub Actions · Frontend QA
         ↓
 GitHub Pages
         ↓
@@ -42,11 +48,101 @@ También incluye:
 - menú lateral fijable/ocultable;
 - diseño responsive;
 - soporte para `prefers-reduced-motion`;
+- automatización local Excel → GitHub;
 - controles automáticos de QA mediante GitHub Actions.
 
 ---
 
-## 2. Fuente de verdad
+## 2. Operación diaria — procedimiento recomendado
+
+Una vez instalada la automatización, actualizar el visor requiere únicamente:
+
+1. abrir `input/Matriz_Seguimiento_Reportes.xlsx`;
+2. actualizar la información;
+3. guardar Excel.
+
+El monitor local detecta el guardado y ejecuta automáticamente:
+
+```text
+Excel guardado
+   ↓
+espera a que el archivo quede estable y desbloqueado
+   ↓
+git pull --ff-only origin main
+   ↓
+procesamiento Excel → JSON
+   ↓
+validaciones de integridad y privacidad
+   ↓
+checks JavaScript locales si Node.js está instalado
+   ↓
+¿cambió realmente la información publicable?
+   ├─ NO → termina sin commit
+   └─ SÍ
+        ↓
+      commit exclusivamente de data/reportes.json y data/metadata.json
+        ↓
+      git push origin main
+        ↓
+      GitHub Actions · Frontend QA
+        ↓
+      GitHub Pages actualiza el visor
+```
+
+La matriz Excel nunca se publica.
+
+---
+
+## 3. Instalar la automatización por primera vez
+
+### Requisitos
+
+En Windows deben estar instalados:
+
+- Git;
+- Python 3;
+- una copia local del repositorio;
+- autenticación de Git configurada para poder hacer `git push origin main` sin introducir credenciales manualmente.
+
+Node.js es recomendable, aunque no obligatorio. Si está disponible, el watcher ejecuta localmente las pruebas JavaScript antes del push; si no, GitHub Actions las ejecutará después.
+
+### Instalación única
+
+Abrir PowerShell en la raíz del repositorio y ejecutar:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\automation\setup_windows.ps1
+```
+
+El instalador:
+
+1. comprueba Git y Python;
+2. exige que el repositorio esté en `main`;
+3. crea `.venv` si no existe;
+4. instala `requirements.txt`;
+5. registra una tarea del Programador de tareas llamada `DCD Visor - Actualizacion automatica`;
+6. configura la tarea para iniciar al iniciar sesión;
+7. inicia inmediatamente el monitor.
+
+Antes de instalar conviene verificar una vez:
+
+```powershell
+git pull origin main
+git push origin main
+```
+
+Si Git solicita autenticación, completar el inicio de sesión y permitir que Git Credential Manager conserve las credenciales.
+
+La documentación detallada de automatización está en:
+
+```text
+docs/AUTOMATION.md
+```
+
+---
+
+## 4. Fuente de verdad
 
 La **única fuente maestra de información es el archivo Excel local**.
 
@@ -66,7 +162,7 @@ El pipeline lee la hoja usando la segunda fila como encabezado (`header=1`).
 
 ### Campos obligatorios
 
-El procesamiento se detiene si faltan estas columnas:
+El procesamiento se detiene si faltan:
 
 ```text
 Tipo de Reporte/Actividad
@@ -81,7 +177,7 @@ Estado del Reporte
 Enlaces
 ```
 
-### Correspondencia principal entre Excel y visor
+### Correspondencia principal Excel → visor
 
 | Excel | Visor / JSON |
 |---|---|
@@ -107,99 +203,209 @@ input/*.xls
 ~$*.xlsx
 ```
 
-El campo **Usuario Reportado** tampoco se publica en el JSON del visor.
+El campo **Usuario Reportado** tampoco se publica en `data/reportes.json`.
 
-Las URLs de SharePoint/OneDrive sí pueden conservarse como evidencia, pero **la URL no modifica los permisos del documento**. El acceso continúa gobernado por Microsoft 365 o por el sistema de origen.
+Las URLs de SharePoint/OneDrive pueden conservarse como evidencia, pero la URL no altera los permisos del documento. El acceso continúa gobernado por Microsoft 365 o por el sistema de origen.
 
 ---
 
-## 3. Estructura del repositorio
+## 5. Estructura del repositorio
 
 ```text
 Prueba_E.github.io/
 │
-├── index.html                  # entrada única del visor
+├── index.html                       # entrada única del visor
 │
 ├── css/
-│   ├── app.css                 # sistema visual general
-│   ├── summary.css             # composición narrativa del Resumen
-│   ├── glass.css               # superficies glass / spatial UI
-│   ├── layout-fix.css          # robustez de layout y overflow
-│   └── motion.css              # animaciones y transiciones
+│   ├── app.css                      # sistema visual general
+│   ├── summary.css                  # composición narrativa del Resumen
+│   ├── glass.css                    # superficies glass / spatial UI
+│   ├── layout-fix.css               # robustez de layout y overflow
+│   └── motion.css                   # animaciones y transiciones
 │
 ├── js/
-│   ├── app.js                  # lógica principal del visor
-│   ├── quarter-filter.js       # segmentador trimestral
-│   ├── sidebar.js              # menú fijable/ocultable
-│   ├── export.js               # XLSX, PDF editorial y CSV
-│   └── source-overrides.js     # capa TRANSITORIA, ver sección 10
+│   ├── app.js                       # lógica principal
+│   ├── quarter-filter.js            # segmentador trimestral
+│   ├── sidebar.js                   # menú fijable/ocultable
+│   ├── export.js                    # XLSX, PDF editorial y CSV
+│   └── source-overrides.js          # capa TRANSITORIA, ver sección 13
 │
 ├── data/
-│   ├── reportes.json           # datos consumidos por el frontend
-│   └── metadata.json           # trazabilidad de la generación
+│   ├── reportes.json                # datos consumidos por el frontend
+│   └── metadata.json                # trazabilidad de generación
 │
 ├── scripts/
-│   └── procesar_matriz.py      # Excel → JSON
+│   ├── procesar_matriz.py           # Excel → JSON
+│   └── watch_and_publish.py         # automatización Excel → GitHub
+│
+├── automation/
+│   ├── setup_windows.ps1            # instalación inicial
+│   ├── start_watcher.ps1            # monitor manual
+│   └── publish_once.ps1             # publicación manual única
+│
+├── docs/
+│   └── AUTOMATION.md                # guía detallada de automatización
 │
 ├── tests/
-│   └── sidebar-layout-check.js # prueba de regresión del sidebar
+│   └── sidebar-layout-check.js      # prueba de regresión del sidebar
 │
-├── input/                      # carpeta local; el Excel no se publica
+├── input/                           # carpeta local; Excel no se publica
+├── logs/                            # logs locales; no se publica
 ├── requirements.txt
 ├── .gitignore
-└── .github/workflows/qa.yml    # Frontend QA
+└── .github/workflows/qa.yml         # Frontend QA
 ```
 
 ---
 
-# 4. Actualizar la información — procedimiento normal
+## 6. Qué protege la automatización
 
-Esta es la operación que debe realizarse cuando cambie la matriz.
+El publicador automático está diseñado para **fallar de forma segura**.
 
-## Paso 1. Actualizar la matriz maestra
+Cancela la publicación si:
 
-Editar normalmente:
+- la rama actual no es `main`;
+- no existe el remoto `origin`;
+- hay cambios locales en archivos distintos de los artefactos de datos autorizados;
+- `git pull --ff-only` detecta divergencias;
+- falla el pipeline Excel → JSON;
+- el JSON está vacío;
+- existen IDs nulos o duplicados;
+- faltan campos públicos esperados;
+- aparece `Usuario Reportado` en el JSON público;
+- `metadata.json` no coincide con el número de registros;
+- falla un check JavaScript local cuando Node.js está disponible;
+- falla el commit o el push.
+
+Si ocurre cualquiera de estos eventos, **la versión pública anterior permanece intacta**.
+
+La automatización nunca usa `force push` y únicamente prepara para commit:
 
 ```text
-input/Matriz_Seguimiento_Reportes.xlsx
+data/reportes.json
+data/metadata.json
 ```
-
-No cambiar el nombre de la hoja ni eliminar columnas obligatorias.
-
-Antes de cerrar Excel revisar especialmente:
-
-- instrumento;
-- acción;
-- descripción;
-- responsable;
-- fechas;
-- estado;
-- enlace de evidencia;
-- observaciones.
-
-Evitar usar `-` como dato real. El pipeline interpreta `-` y celdas vacías como valores nulos.
 
 ---
 
-## Paso 2. Actualizar el repositorio local
+## 7. Evitar commits innecesarios
 
-Desde una terminal en el repositorio:
+Guardar Excel no implica necesariamente un commit.
+
+El pipeline actualiza la fecha `generated_at` en `metadata.json`, pero el watcher verifica primero si `data/reportes.json` cambió realmente.
+
+Si la información publicable es idéntica:
+
+```text
+reportes.json sin cambios
+        ↓
+metadata.json se restaura
+        ↓
+no commit
+        ↓
+no push
+```
+
+Esto evita contaminar el historial de Git con guardados sin cambios sustantivos.
+
+---
+
+## 8. Logs y diagnóstico
+
+Todos los eventos del monitor se registran localmente en:
+
+```text
+logs/automation.log
+```
+
+`logs/` está excluido de Git.
+
+Ejemplo de operación exitosa:
+
+```text
+Cambio detectado en la matriz.
+PUBLICACIÓN OK · 41 registros · GitHub Pages se actualizará desde main.
+```
+
+Ejemplo de cancelación:
+
+```text
+PUBLICACIÓN CANCELADA · la versión pública anterior permanece intacta.
+```
+
+Si algo no funciona, el primer paso siempre debe ser revisar `logs/automation.log`.
+
+---
+
+## 9. Ejecutar manualmente
+
+### Publicar una vez
+
+```powershell
+.\automation\publish_once.ps1
+```
+
+Esto ejecuta una actualización completa y termina.
+
+### Ejecutar el monitor manualmente
+
+```powershell
+.\automation\start_watcher.ps1
+```
+
+Detener con `Ctrl+C`.
+
+---
+
+## 10. Administrar la tarea de Windows
+
+### Consultar estado
+
+```powershell
+Get-ScheduledTask -TaskName 'DCD Visor - Actualizacion automatica'
+```
+
+### Iniciar
+
+```powershell
+Start-ScheduledTask -TaskName 'DCD Visor - Actualizacion automatica'
+```
+
+### Detener
+
+```powershell
+Stop-ScheduledTask -TaskName 'DCD Visor - Actualizacion automatica'
+```
+
+### Eliminar
+
+```powershell
+Unregister-ScheduledTask -TaskName 'DCD Visor - Actualizacion automatica' -Confirm:$false
+```
+
+---
+
+## 11. Procedimiento manual de contingencia
+
+El flujo automático es el procedimiento normal. Este bloque debe usarse solo para diagnóstico, recuperación o cuando la automatización esté deshabilitada.
+
+### 11.1 Sincronizar
 
 ```bash
 git pull origin main
 ```
 
-Si es la primera vez que se ejecuta el proyecto en el equipo, crear un entorno virtual:
+### 11.2 Crear entorno virtual, si no existe
 
-### Windows
+#### Windows
 
-```bash
+```powershell
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### macOS / Linux
+#### macOS / Linux
 
 ```bash
 python3 -m venv .venv
@@ -214,11 +420,7 @@ pandas >= 2.2, < 3
 openpyxl >= 3.1, < 4
 ```
 
----
-
-## Paso 3. Regenerar los datos
-
-Ejecutar:
+### 11.3 Regenerar datos
 
 ```bash
 python scripts/procesar_matriz.py
@@ -230,55 +432,23 @@ Resultado esperado:
 OK · XX registros exportados a .../data/reportes.json
 ```
 
-El script genera/actualiza:
+### 11.4 Validar JSON
 
-```text
-data/reportes.json
-data/metadata.json
-```
+#### Windows
 
-`metadata.json` registra, entre otros:
-
-- fecha y hora de generación;
-- nombre del archivo fuente;
-- hoja fuente;
-- cantidad de registros;
-- política de privacidad;
-- correspondencia semántica de instrumento, acción y descripción.
-
----
-
-## Paso 4. Revisar el resultado antes de publicar
-
-Comprobar como mínimo:
-
-1. que el número de registros sea razonable frente a la matriz;
-2. que los instrumentos estén correctamente identificados;
-3. que las acciones CONPES/PND u otros identificadores correspondan con la matriz;
-4. que las fechas no hayan cambiado de forma inesperada;
-5. que los enlaces de evidencia estén presentes cuando corresponda;
-6. que no se haya publicado `Usuario Reportado`;
-7. que no aparezcan datos sensibles adicionales.
-
-Validación rápida del JSON:
-
-```bash
+```powershell
 python -m json.tool data/reportes.json > NUL
 ```
 
-En macOS/Linux:
+#### macOS / Linux
 
 ```bash
 python -m json.tool data/reportes.json > /dev/null
 ```
 
----
+### 11.5 Probar localmente
 
-## Paso 5. Probar el visor localmente
-
-No abrir `index.html` directamente con `file://`, porque el visor carga JSON mediante `fetch()`.
-
-Levantar un servidor local:
+No abrir `index.html` directamente con `file://`, porque el visor usa `fetch()`.
 
 ```bash
 python -m http.server 8000
@@ -290,95 +460,9 @@ Abrir:
 http://localhost:8000/
 ```
 
-Revisar las tres vistas:
+Revisar Resumen, Calendario, Matriz, filtro trimestral, drawer, evidencia, exportaciones, menú fijado/oculto, textos largos y comportamiento responsive.
 
-### Resumen
-
-- prioridades;
-- cumplimiento;
-- instrumentos;
-- responsables;
-- próximos hitos;
-- drill-down al hacer clic;
-- exportaciones.
-
-### Calendario
-
-- mes correcto;
-- eventos dentro del día;
-- agenda lateral;
-- apertura del detalle.
-
-### Matriz
-
-- búsqueda;
-- filtro trimestral T1–T4;
-- filtro por estado;
-- responsable;
-- instrumento;
-- restablecer filtros;
-- drawer de detalle;
-- evidencia.
-
-También probar:
-
-- ocultar/fijar el menú;
-- ancho completo con menú oculto;
-- escritorio y móvil;
-- textos largos sin overflow.
-
----
-
-# 5. Controles de calidad
-
-GitHub ejecuta automáticamente el workflow:
-
-```text
-Frontend QA
-```
-
-ubicado en:
-
-```text
-.github/workflows/qa.yml
-```
-
-Se ejecuta en:
-
-- cada Pull Request hacia `main`;
-- cada `push` a `main`.
-
-Actualmente valida:
-
-- sintaxis de `app.js`;
-- sintaxis de `export.js`;
-- sintaxis de `quarter-filter.js`;
-- sintaxis de `sidebar.js`;
-- prueba de regresión del sidebar;
-- validez sintáctica de `data/reportes.json`;
-- existencia de IDs críticos del DOM;
-- carga de todos los CSS y JS principales;
-- existencia de las tres exportaciones;
-- ausencia de assets antiguos como `v2.html`, `v5.html` y CSS de prototipo.
-
-### Pruebas locales útiles
-
-```bash
-node --check js/app.js
-node --check js/export.js
-node --check js/quarter-filter.js
-node --check js/sidebar.js
-node tests/sidebar-layout-check.js
-python -m json.tool data/reportes.json > NUL
-```
-
-**No fusionar un PR si `Frontend QA` no termina en verde.**
-
----
-
-# 6. Publicar una actualización
-
-Para un cambio normal de datos:
+### 11.6 Publicar manualmente
 
 ```bash
 git status
@@ -387,146 +471,55 @@ git commit -m "Update report tracking data"
 git push origin main
 ```
 
-Para cambios de frontend o lógica es preferible trabajar mediante rama + Pull Request:
+---
+
+## 12. Controles de calidad
+
+GitHub ejecuta automáticamente:
+
+```text
+Frontend QA
+```
+
+ubicado en `.github/workflows/qa.yml`.
+
+Se ejecuta en cada Pull Request hacia `main` y en cada `push` a `main`.
+
+Actualmente valida:
+
+- sintaxis de los JavaScript principales;
+- sintaxis de los scripts Python de procesamiento y automatización;
+- prueba de regresión del sidebar;
+- validez de `data/reportes.json`;
+- existencia de IDs críticos del DOM;
+- carga de CSS y JS de producción;
+- existencia de las tres exportaciones;
+- presencia de los archivos críticos de automatización;
+- ausencia de assets históricos como `v2.html`, `v5.html` y CSS de prototipo.
+
+Pruebas locales útiles:
 
 ```bash
-git checkout -b nombre-del-cambio
-# realizar cambios
-git add .
-git commit -m "Describe change"
-git push -u origin nombre-del-cambio
+node --check js/app.js
+node --check js/export.js
+node --check js/quarter-filter.js
+node --check js/sidebar.js
+node tests/sidebar-layout-check.js
+python -m py_compile scripts/procesar_matriz.py scripts/watch_and_publish.py
+python -m json.tool data/reportes.json > NUL
 ```
 
-Crear PR hacia `main`, esperar `Frontend QA = success`, revisar el diff y fusionar.
-
-GitHub Pages sirve el contenido de producción desde `main`.
-
-URL pública:
-
-```text
-https://eleskigal.github.io/Prueba_E.github.io/
-```
-
-Después de un merge/push puede existir un pequeño retraso antes de que GitHub Pages refleje el cambio.
+**No fusionar cambios de código si `Frontend QA` no termina en verde.**
 
 ---
 
-# 7. Exportaciones
+## 13. Importante: `source-overrides.js` es transitorio
 
-El botón **Exportar** ofrece tres formatos.
+Actualmente existe `js/source-overrides.js`.
 
-## XLSX
+Se creó para corregir temporalmente determinados registros mientras el JSON histórico provenía de una versión anterior del pipeline.
 
-Genera una matriz operativa con los datos publicables disponibles en el visor.
-
-Incluye una hoja de metadatos.
-
-No debe interpretarse como una copia binaria exacta del Excel privado, porque deliberadamente no publica campos excluidos por privacidad, como `Usuario Reportado`.
-
-## PDF
-
-Genera una salida editorial del Resumen, preparada para impresión/guardado como PDF.
-
-No es una captura del dashboard; utiliza una composición independiente para lectura ejecutiva.
-
-## CSV
-
-Genera una base plana en UTF-8 para reutilización en:
-
-- Excel;
-- Python;
-- R;
-- Power BI;
-- otros procesos analíticos.
-
----
-
-# 8. Mantenimiento del frontend
-
-## Antes de modificar diseño
-
-El diseño actual sigue una combinación de:
-
-- **spatial UI**;
-- minimalismo;
-- superficies glass contenidas;
-- jerarquía editorial;
-- IBM Plex Serif + IBM Plex Sans.
-
-Evitar volver a una interfaz basada en tarjetas genéricas o incorporar frameworks sin necesidad.
-
-## Responsabilidad de cada CSS
-
-### `css/app.css`
-
-Base del producto: layout, navegación, tablas, calendario, drawer y componentes generales.
-
-### `css/summary.css`
-
-Storytelling y composición específica de la hoja Resumen.
-
-### `css/glass.css`
-
-Profundidad, transparencia y superficies spatial/glass.
-
-### `css/layout-fix.css`
-
-Correcciones de overflow, wrapping y comportamiento responsive. No eliminar sin verificar tarjetas con textos largos.
-
-### `css/motion.css`
-
-Cadencia de animaciones. Prioriza `transform` y `opacity` para minimizar lag.
-
-## JavaScript
-
-### `js/app.js`
-
-Es la lógica central. Modificar con cuidado.
-
-### `js/quarter-filter.js`
-
-Extiende la Matriz con segmentación trimestral.
-
-### `js/sidebar.js`
-
-Controla menú fijado, oculto, overlay y preferencia guardada en `localStorage`.
-
-### `js/export.js`
-
-Controla exportaciones XLSX, PDF y CSV.
-
----
-
-# 9. Reglas que no se deben romper
-
-1. **Excel es la fuente de verdad.** No corregir datos manualmente en HTML.
-2. No publicar el archivo Excel en GitHub.
-3. No publicar `Usuario Reportado` sin una decisión explícita de gobernanza de datos.
-4. Mantener `index.html` como única entrada de producción.
-5. No volver a crear `v2.html`, `v5.html` u otras páginas versionadas.
-6. Conservar los IDs utilizados por `app.js` y por el QA.
-7. Mantener las tres vistas: Resumen, Calendario y Matriz.
-8. Mantener el segmentador trimestral.
-9. Mantener evidencia, instrumento y acción en el modelo de datos.
-10. Mantener la funcionalidad textual del calendario.
-11. Probar textos largos antes de modificar grids o tamaños de tarjeta.
-12. Mantener `prefers-reduced-motion`.
-13. No fusionar cambios con QA fallido.
-14. No agregar dependencias grandes si Vanilla JS resuelve la necesidad.
-
----
-
-# 10. Importante: `source-overrides.js` es transitorio
-
-Actualmente existe:
-
-```text
-js/source-overrides.js
-```
-
-Este archivo fue creado para sincronizar temporalmente determinados registros con la matriz original cuando el JSON histórico todavía había sido generado por una versión anterior del pipeline.
-
-El pipeline actual (`scripts/procesar_matriz.py`) **ya genera directamente**:
+El pipeline actual `scripts/procesar_matriz.py` ya genera directamente:
 
 - `instrumento`;
 - `accion`;
@@ -539,204 +532,178 @@ Por tanto, `source-overrides.js` debe considerarse **deuda técnica temporal**.
 
 ### Riesgo
 
-Los overrides se aplican usando `fila_fuente`. Si en el futuro se insertan, eliminan o reorganizan filas en Excel, un override antiguo podría terminar aplicándose al registro equivocado o sobrescribir un valor actualizado.
+Los overrides se aplican mediante `fila_fuente`. Si se insertan, eliminan o reorganizan filas en Excel, un override histórico podría terminar aplicándose a otro registro o sobrescribir un valor nuevo.
 
 ### Cómo retirarlo correctamente
 
-No borrarlo sin validar primero.
+1. detener temporalmente la automatización;
+2. colocar la matriz maestra más reciente en `input/Matriz_Seguimiento_Reportes.xlsx`;
+3. ejecutar `python scripts/procesar_matriz.py`;
+4. comparar los registros incluidos hoy en `source-overrides.js` contra `reportes.json`;
+5. verificar instrumento, acción, descripción, fechas, observaciones y evidencia;
+6. si todo coincide con Excel, eliminar la referencia a `source-overrides.js` de `index.html`;
+7. eliminar `js/source-overrides.js`;
+8. ejecutar QA;
+9. publicar mediante PR;
+10. volver a activar la automatización.
 
-Procedimiento recomendado:
+No eliminar esta capa sin la comparación previa.
 
-1. colocar la matriz maestra más reciente en `input/Matriz_Seguimiento_Reportes.xlsx`;
-2. ejecutar `python scripts/procesar_matriz.py`;
-3. comparar los registros que hoy aparecen en `source-overrides.js` contra el nuevo `reportes.json`;
-4. verificar instrumentos, acciones, descripciones, fechas, observaciones y evidencias;
-5. si todo coincide con Excel, eliminar la referencia a `source-overrides.js` de `index.html`;
-6. eliminar `js/source-overrides.js`;
-7. probar las tres vistas;
-8. ejecutar todo el QA;
-9. publicar mediante PR.
+---
 
-Después de esa migración, toda actualización debe depender exclusivamente de:
+## 14. Exportaciones
+
+El botón **Exportar** ofrece tres formatos.
+
+### XLSX
+
+Genera una matriz operativa con la información publicable disponible en el visor e incluye metadatos.
+
+No es una copia binaria exacta del Excel privado porque no publica campos deliberadamente excluidos, como `Usuario Reportado`.
+
+### PDF
+
+Genera una salida editorial del Resumen, preparada para lectura ejecutiva e impresión/guardado como PDF.
+
+### CSV
+
+Genera una base plana UTF-8 para reutilización en Excel, Python, R, Power BI y otros procesos analíticos.
+
+---
+
+## 15. Mantenimiento del frontend
+
+El diseño actual sigue una combinación de:
+
+- spatial UI;
+- minimalismo;
+- glass contenido;
+- jerarquía editorial;
+- IBM Plex Serif + IBM Plex Sans.
+
+### CSS
+
+- `css/app.css`: layout, navegación, tablas, calendario, drawer y componentes generales.
+- `css/summary.css`: storytelling y composición del Resumen.
+- `css/glass.css`: profundidad y superficies spatial/glass.
+- `css/layout-fix.css`: overflow, wrapping y responsive.
+- `css/motion.css`: cadencia de movimiento, `transform`, `opacity` y `prefers-reduced-motion`.
+
+### JavaScript
+
+- `js/app.js`: lógica central.
+- `js/quarter-filter.js`: segmentación trimestral.
+- `js/sidebar.js`: menú fijado/oculto y persistencia en `localStorage`.
+- `js/export.js`: exportaciones XLSX, PDF y CSV.
+
+---
+
+## 16. Cambios de código mientras la automatización está activa
+
+La automatización está diseñada para publicar **datos**, no para convivir con una sesión de desarrollo.
+
+Si se van a modificar HTML, CSS, JavaScript o Python:
+
+1. detener temporalmente la tarea programada;
+2. trabajar en una rama distinta de `main`;
+3. hacer Pull Request;
+4. esperar `Frontend QA = success`;
+5. fusionar;
+6. volver localmente a `main`;
+7. ejecutar `git pull origin main`;
+8. reiniciar la tarea automática.
+
+---
+
+## 17. Recuperación ante fallos
+
+### El monitor no publica
+
+Revisar `logs/automation.log` y luego ejecutar:
+
+```powershell
+.\automation\publish_once.ps1
+```
+
+### Hay cambios locales inesperados
+
+```bash
+git status
+```
+
+Resolver, confirmar o descartar esos cambios antes de publicar.
+
+### `git pull --ff-only` falla
+
+La copia local y GitHub han divergido. No usar `--force`. Detener la automatización y reconciliar Git manualmente.
+
+### El push funciona pero el sitio no cambia
+
+Revisar GitHub Actions, la publicación de GitHub Pages y la caché del navegador.
+
+---
+
+## 18. Reglas que no se deben romper
+
+1. **Excel es la fuente de verdad.**
+2. No corregir datos manualmente en HTML.
+3. No publicar la matriz Excel.
+4. No publicar `Usuario Reportado` sin decisión explícita de gobernanza.
+5. Mantener `index.html` como única entrada de producción.
+6. No recrear `v2.html`, `v5.html` ni páginas versionadas.
+7. Mantener Resumen, Calendario y Matriz.
+8. Mantener el segmentador trimestral.
+9. Mantener instrumento, acción y evidencia en el modelo.
+10. Mantener eventos textuales en el calendario.
+11. Probar textos largos antes de modificar grids.
+12. Mantener `prefers-reduced-motion`.
+13. No fusionar cambios de código con QA fallido.
+14. No usar `force push` en la automatización.
+15. No permitir que el watcher publique archivos distintos de los dos JSON autorizados.
+16. Para desarrollo, detener temporalmente la automatización y usar una rama distinta de `main`.
+17. No añadir dependencias grandes cuando Vanilla JS resuelve la necesidad.
+
+---
+
+## 19. Checklist de puesta en marcha
+
+- [ ] repositorio clonado localmente;
+- [ ] rama actual `main`;
+- [ ] `git pull origin main` funciona;
+- [ ] `git push origin main` funciona sin pedir credenciales interactivas;
+- [ ] matriz ubicada en `input/Matriz_Seguimiento_Reportes.xlsx`;
+- [ ] `automation/setup_windows.ps1` ejecutado;
+- [ ] tarea `DCD Visor - Actualizacion automatica` creada;
+- [ ] tarea en estado `Ready` o `Running`;
+- [ ] guardar Excel genera entrada en `logs/automation.log`;
+- [ ] un cambio real produce commit y push;
+- [ ] un guardado sin cambios no produce commit;
+- [ ] GitHub Actions termina en verde;
+- [ ] GitHub Pages refleja la nueva información.
+
+---
+
+## 20. Referencias internas
+
+Guía detallada de automatización:
 
 ```text
-Excel → procesar_matriz.py → reportes.json
+docs/AUTOMATION.md
 ```
 
----
-
-# 11. Solución de problemas
-
-## `FileNotFoundError` al ejecutar el pipeline
-
-Revisar que exista exactamente:
+Pipeline de datos:
 
 ```text
-input/Matriz_Seguimiento_Reportes.xlsx
+scripts/procesar_matriz.py
 ```
 
-## Error de columnas obligatorias
-
-El Excel cambió de estructura o se renombró una columna. Comparar con la sección **Campos obligatorios**.
-
-No modificar el script para aceptar nombres diferentes sin validar primero si la matriz cambió de estándar.
-
-## El visor queda en “Cargando…”
-
-Posibles causas:
-
-- `reportes.json` inválido;
-- se abrió con `file://`;
-- error JavaScript;
-- ruta incorrecta a `data/reportes.json`.
-
-Revisar consola del navegador y ejecutar:
-
-```bash
-python -m json.tool data/reportes.json
-```
-
-## GitHub Pages no refleja el cambio
-
-1. verificar que el commit esté en `main`;
-2. verificar GitHub Actions;
-3. hacer recarga fuerte del navegador;
-4. esperar la actualización de Pages si el merge fue reciente.
-
-## El menú oculto hace desaparecer el contenido
-
-Existe una prueba de regresión específica:
-
-```bash
-node tests/sidebar-layout-check.js
-```
-
-No modificar las reglas `sidebar-collapsed` sin actualizar y ejecutar esta prueba.
-
-## Una tarjeta desborda contenido
-
-Revisar primero `css/layout-fix.css`. No resolver reduciendo excesivamente la tipografía; preferir:
-
-- `min-width: 0`;
-- wrapping;
-- grids flexibles;
-- límites de ancho adecuados.
-
-## Las animaciones se sienten lentas
-
-Revisar `css/motion.css` y `js/sidebar.js`.
-
-Evitar animar:
-
-- `width` de bloques grandes;
-- `height` complejos;
-- `box-shadow` pesado;
-- `backdrop-filter` durante movimientos continuos.
-
-Preferir:
-
-- `transform`;
-- `opacity`;
-- transiciones cortas;
-- `requestAnimationFrame` cuando se sincronizan cambios de clase.
-
----
-
-# 12. Checklist de mantenimiento
-
-## Cada actualización de datos
-
-- [ ] Matriz actualizada y guardada.
-- [ ] Nombre del archivo correcto.
-- [ ] Hoja `Matriz de Seguimiento_detalle` intacta.
-- [ ] `git pull origin main` ejecutado.
-- [ ] Pipeline ejecutado sin errores.
-- [ ] Cantidad de registros revisada.
-- [ ] Instrumentos y acciones revisados.
-- [ ] Fechas revisadas.
-- [ ] Evidencias revisadas.
-- [ ] Privacidad revisada.
-- [ ] Resumen probado.
-- [ ] Calendario probado.
-- [ ] Matriz y trimestre probados.
-- [ ] Exportaciones probadas.
-- [ ] Sidebar probado.
-- [ ] QA en verde.
-- [ ] Sitio publicado revisado.
-
-## Cada cambio de frontend
-
-- [ ] No se modificaron datos accidentalmente.
-- [ ] Desktop revisado.
-- [ ] Mobile revisado.
-- [ ] Textos largos revisados.
-- [ ] Drawer revisado.
-- [ ] Calendario revisado.
-- [ ] Matriz revisada.
-- [ ] Exportaciones revisadas.
-- [ ] `prefers-reduced-motion` conservado.
-- [ ] QA en verde antes del merge.
-
----
-
-# 13. Estado recomendado del proyecto
-
-Arquitectura objetivo final:
+Watcher y publicador:
 
 ```text
-Matriz Excel local / OneDrive
-          ↓
-Pipeline Python validado
-          ↓
-reportes.json + metadata.json
-          ↓
-Frontend estático
-          ↓
-GitHub Actions QA
-          ↓
-main
-          ↓
-GitHub Pages
+scripts/watch_and_publish.py
 ```
 
-Siguiente mejora técnica recomendada, si se retoma el proyecto:
-
-1. eliminar `source-overrides.js` después de regenerar y validar la matriz más reciente;
-2. automatizar el flujo local `guardar Excel → ejecutar QA → generar JSON → commit/push`;
-3. conservar el frontend actual sin introducir infraestructura innecesaria.
-
----
-
-## Referencia rápida
-
-**Actualizar datos**
-
-```bash
-git pull origin main
-python scripts/procesar_matriz.py
-python -m http.server 8000
-```
-
-**Validar**
-
-```bash
-node --check js/app.js
-node --check js/export.js
-node --check js/quarter-filter.js
-node --check js/sidebar.js
-node tests/sidebar-layout-check.js
-python -m json.tool data/reportes.json
-```
-
-**Publicar datos validados**
-
-```bash
-git add data/reportes.json data/metadata.json
-git commit -m "Update report tracking data"
-git push origin main
-```
-
-**Sitio**
+Sitio de producción:
 
 ```text
 https://eleskigal.github.io/Prueba_E.github.io/
