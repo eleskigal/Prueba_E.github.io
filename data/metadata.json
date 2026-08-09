@@ -1,0 +1,14 @@
+{
+  "source_file": "Matriz_Seguimiento_Reportes.xlsx",
+  "source_sheet": "Matriz de Seguimiento_detalle",
+  "records": 41,
+  "estado_fuente": {
+    "Entregado": 26,
+    "Pendiente": 12,
+    "Atrasado": 1,
+    "En proceso": 1,
+    "Sin estado": 1
+  },
+  "privacy": "El JSON público excluye Usuario Reportado y las URLs del campo Enlaces; evidencia_disponible solo indica si existe soporte en la matriz.",
+  "validation": "OK: 41 identificadores únicos, fechas normalizadas ISO y sin URLs internas publicadas."
+}
