@@ -22,7 +22,7 @@ PIPELINE = ROOT / "scripts" / "procesar_matriz.py"
 POLL_SECONDS = 2.0
 STABLE_CHECKS = 3
 STABLE_INTERVAL = 1.0
-ALLOWED_TRACKED_CHANGES = {"data/reportes.json", "data/metadata.json"}
+GENERATED_FILES = {"data/reportes.json", "data/metadata.json"}
 REQUIRED_PUBLIC_FIELDS = {
     "id", "instrumento", "tema", "plataforma", "responsable", "periodicidad",
     "accion", "descripcion_accion", "fecha_limite", "estado_fuente",
@@ -63,6 +63,13 @@ def git_lines(*args: str) -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+def status_path(line: str) -> str:
+    path = line[3:].strip()
+    if " -> " in path:
+        path = path.split(" -> ", 1)[1]
+    return path.replace("\\", "/")
+
+
 def ensure_git_ready() -> None:
     if shutil.which("git") is None:
         raise RuntimeError("Git no está instalado o no está disponible en PATH.")
@@ -75,16 +82,28 @@ def ensure_git_ready() -> None:
     if "origin" not in remotes:
         raise RuntimeError("El repositorio local no tiene un remoto llamado origin.")
 
-    dirty = []
+    generated_dirty = []
+    unexpected = []
     for line in git_lines("status", "--porcelain"):
-        path = line[3:].strip().replace("\\", "/")
-        if path not in ALLOWED_TRACKED_CHANGES:
-            dirty.append(line)
-    if dirty:
+        path = status_path(line)
+        if path in GENERATED_FILES:
+            generated_dirty.append(path)
+        else:
+            unexpected.append(line)
+
+    if unexpected:
         raise RuntimeError(
             "Hay cambios locales no relacionados con los datos. La publicación se cancela para no incluirlos:\n"
-            + "\n".join(dirty)
+            + "\n".join(unexpected)
         )
+
+    if generated_dirty:
+        logging.warning(
+            "Se encontraron artefactos generados sin publicar de una ejecución anterior. "
+            "Se restauran antes de sincronizar: %s",
+            ", ".join(sorted(set(generated_dirty))),
+        )
+        run(["git", "restore", "--", *sorted(set(generated_dirty))])
 
 
 def wait_until_stable(path: Path) -> None:
@@ -105,8 +124,7 @@ def wait_until_stable(path: Path) -> None:
             previous = signature
         time.sleep(STABLE_INTERVAL)
 
-    # Excel puede mantener el archivo bloqueado unos instantes adicionales.
-    for attempt in range(10):
+    for _ in range(10):
         try:
             with path.open("rb") as fh:
                 fh.read(1)
@@ -129,7 +147,8 @@ def validate_generated_data() -> int:
     if any(not value for value in ids) or len(ids) != len(set(ids)):
         raise RuntimeError("Los IDs del dataset son nulos o no son únicos.")
 
-    missing_fields = sorted(REQUIRED_PUBLIC_FIELDS - set().union(*(row.keys() for row in rows)))
+    all_keys = set().union(*(row.keys() for row in rows))
+    missing_fields = sorted(REQUIRED_PUBLIC_FIELDS - all_keys)
     if missing_fields:
         raise RuntimeError(f"Faltan campos públicos esperados: {missing_fields}")
 
@@ -175,9 +194,7 @@ def publish_once() -> bool:
     ensure_git_ready()
     wait_until_stable(MATRIX)
 
-    # Mantiene main alineado con GitHub antes de regenerar. Si hay una divergencia, falla sin forzar nada.
     run(["git", "pull", "--ff-only", "origin", "main"])
-
     run([sys.executable, str(PIPELINE)])
     records = validate_generated_data()
     optional_frontend_syntax_checks()
@@ -191,7 +208,7 @@ def publish_once() -> bool:
     run(["git", "add", "data/reportes.json", "data/metadata.json"])
 
     staged = git_lines("diff", "--cached", "--name-only")
-    unexpected = [p for p in staged if p not in ALLOWED_TRACKED_CHANGES]
+    unexpected = [p for p in staged if p not in GENERATED_FILES]
     if unexpected:
         run(["git", "reset", "HEAD", "--", *unexpected], check=False)
         raise RuntimeError(f"Se intentaron preparar archivos no autorizados: {unexpected}")
@@ -226,14 +243,17 @@ def watch() -> None:
                 last = current
                 continue
             if current != last:
-                last = current
+                detected = current
                 logging.info("Cambio detectado en la matriz.")
                 try:
                     publish_once()
                 except Exception:
                     logging.exception("PUBLICACIÓN CANCELADA · la versión pública anterior permanece intacta.")
                 finally:
-                    last = file_signature(MATRIX)
+                    after = file_signature(MATRIX)
+                    # Si Excel volvió a guardarse durante el procesamiento, se conserva la firma previa
+                    # para que el siguiente ciclo detecte y procese ese cambio adicional.
+                    last = detected if after != detected else after
         except KeyboardInterrupt:
             logging.info("Monitor detenido por el usuario.")
             return
