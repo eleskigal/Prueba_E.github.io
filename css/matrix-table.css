@@ -1,0 +1,40 @@
+/* Matriz · tabla operativa redimensionable */
+#view-matriz .matrix-panel{overflow:hidden}
+#view-matriz .table-scroll{position:relative;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+#view-matriz table.resizable-table{table-layout:fixed;width:max-content;min-width:100%;border-collapse:separate;border-spacing:0}
+#view-matriz table.resizable-table th,
+#view-matriz table.resizable-table td{position:relative;overflow:hidden}
+#view-matriz table.resizable-table th{height:38px;padding:0 14px;background:rgba(244,241,234,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:0;border-bottom:1px solid var(--line);white-space:nowrap;text-overflow:ellipsis;user-select:none}
+#view-matriz table.resizable-table th:not(:last-child),
+#view-matriz table.resizable-table td:not(:last-child){border-right:1px solid rgba(217,212,202,.42)}
+#view-matriz table.resizable-table tbody tr{background:rgba(255,254,250,.72)}
+#view-matriz table.resizable-table tbody tr:nth-child(even){background:rgba(250,248,243,.72)}
+#view-matriz table.resizable-table tbody tr:hover{background:rgba(235,241,245,.72)}
+#view-matriz table.resizable-table td{height:48px;padding:9px 14px;white-space:nowrap;text-overflow:ellipsis}
+#view-matriz table.resizable-table td:nth-child(1){white-space:normal}
+#view-matriz table.resizable-table td:nth-child(1)>strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.28}
+#view-matriz table.resizable-table td:nth-child(1)>small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-matriz table.resizable-table td:nth-child(2)>strong,
+#view-matriz table.resizable-table td:nth-child(3),
+#view-matriz table.resizable-table td:nth-child(4){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.column-resizer{position:absolute;top:0;right:-4px;width:9px;height:100%;z-index:5;cursor:col-resize;touch-action:none;outline:none}
+.column-resizer::before{content:"";position:absolute;top:8px;bottom:8px;left:4px;width:1px;border-radius:2px;background:transparent;transition:background 120ms ease,box-shadow 120ms ease}
+th:hover>.column-resizer::before,.column-resizer:focus-visible::before,.column-resizer.is-dragging::before{background:rgba(36,87,126,.58);box-shadow:0 0 0 2px rgba(36,87,126,.08)}
+.column-resizer::after{content:"";position:absolute;inset:0}
+body.is-resizing-columns{cursor:col-resize!important;user-select:none!important}
+body.is-resizing-columns *{cursor:col-resize!important}
+
+.matrix-actions{display:flex;align-items:center;gap:10px}
+.matrix-columns-reset{border:0;background:transparent;color:var(--muted);font-size:8px;font-weight:780;cursor:pointer;padding:4px}
+.matrix-columns-reset:hover{color:var(--navy-2);text-decoration:underline}
+.matrix-columns-reset:focus-visible{outline:2px solid rgba(36,87,126,.35);outline-offset:2px;border-radius:4px}
+
+@media(max-width:900px){
+  #view-matriz table.resizable-table{table-layout:auto;min-width:970px;width:100%}
+  #view-matriz table.resizable-table col{width:auto!important}
+  .column-resizer,.matrix-columns-reset{display:none!important}
+  #view-matriz table.resizable-table th,#view-matriz table.resizable-table td{overflow:visible}
+}
+
+@media(prefers-reduced-motion:reduce){.column-resizer::before{transition:none}}
