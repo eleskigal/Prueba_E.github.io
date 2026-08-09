@@ -1,0 +1,32 @@
+name: Frontend QA
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: node --check js/app.js
+      - name: Validate JSON data
+        run: python -m json.tool data/reportes.json > /dev/null
+      - name: Validate required application hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          for id in view-resumen view-calendario view-matriz summary-kpis calendar-grid month-agenda buscar estado responsable instrumento tbody drawer; do
+            grep -q "id=\"$id\"" index.html || { echo "Missing DOM id: $id"; exit 1; }
+          done
+          grep -q "dashboard-v5.css" index.html
+          grep -q "./js/app.js" index.html
+      - name: Ensure obsolete version pages are absent
+        shell: bash
+        run: |
+          test ! -e v2.html
+          test ! -e v5.html
+          test ! -e css/dashboard.css
