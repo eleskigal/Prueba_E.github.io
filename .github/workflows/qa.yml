@@ -33,6 +33,7 @@ jobs:
           grep -q "./css/summary.css" index.html
           grep -q "./css/glass.css" index.html
           grep -q "./css/layout-fix.css" index.html
+          grep -q "./css/motion.css" index.html
           grep -q "xlsx.full.min.js" index.html
           grep -q "./js/app.js" index.html
           grep -q "./js/quarter-filter.js" index.html
@@ -43,6 +44,7 @@ jobs:
           grep -q 'data-export="csv"' index.html
           test -s css/glass.css
           test -s css/layout-fix.css
+          test -s css/motion.css
           test -s js/export.js
           test -s js/quarter-filter.js
           test -s js/sidebar.js
