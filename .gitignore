@@ -7,3 +7,6 @@ input/*.xls
 __pycache__/
 *.pyc
 .venv/
+
+# Automatización local
+logs/
