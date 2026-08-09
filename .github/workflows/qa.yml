@@ -17,13 +17,16 @@ jobs:
           node --check js/export.js
           node --check js/quarter-filter.js
           node --check js/sidebar.js
+          node --check tests/sidebar-layout-check.js
+      - name: Validate sidebar layout regression
+        run: node tests/sidebar-layout-check.js
       - name: Validate JSON data
         run: python -m json.tool data/reportes.json > /dev/null
       - name: Validate required application hooks
         shell: bash
         run: |
           set -euo pipefail
-          for id in view-resumen view-calendario view-matriz summary-kpis calendar-grid month-agenda buscar trimestre estado responsable instrumento tbody drawer export-toggle export-menu; do
+          for id in view-resumen view-calendario view-matriz summary-kpis calendar-grid month-agenda buscar trimestre estado responsable instrumento tbody drawer export-toggle export-menu sidebar; do
             grep -q "id=\"$id\"" index.html || { echo "Missing DOM id: $id"; exit 1; }
           done
           grep -q "./css/app.css" index.html
@@ -33,11 +36,11 @@ jobs:
           grep -q "xlsx.full.min.js" index.html
           grep -q "./js/app.js" index.html
           grep -q "./js/quarter-filter.js" index.html
+          grep -q "./js/sidebar.js" index.html
           grep -q "./js/export.js" index.html
           grep -q 'data-export="xlsx"' index.html
           grep -q 'data-export="pdf"' index.html
           grep -q 'data-export="csv"' index.html
-          grep -q 'sidebar.js' js/quarter-filter.js
           test -s css/glass.css
           test -s css/layout-fix.css
           test -s js/export.js
