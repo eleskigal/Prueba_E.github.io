@@ -12,18 +12,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check JavaScript syntax
-        run: node --check js/app.js
+        run: |
+          node --check js/app.js
+          node --check js/export.js
       - name: Validate JSON data
         run: python -m json.tool data/reportes.json > /dev/null
       - name: Validate required application hooks
         shell: bash
         run: |
           set -euo pipefail
-          for id in view-resumen view-calendario view-matriz summary-kpis calendar-grid month-agenda buscar estado responsable instrumento tbody drawer; do
+          for id in view-resumen view-calendario view-matriz summary-kpis calendar-grid month-agenda buscar estado responsable instrumento tbody drawer export-toggle export-menu; do
             grep -q "id=\"$id\"" index.html || { echo "Missing DOM id: $id"; exit 1; }
           done
           grep -q "./css/app.css" index.html
+          grep -q "./css/summary.css" index.html
+          grep -q "xlsx.full.min.js" index.html
           grep -q "./js/app.js" index.html
+          grep -q "./js/export.js" index.html
+          grep -q 'data-export="xlsx"' index.html
+          grep -q 'data-export="pdf"' index.html
+          grep -q 'data-export="csv"' index.html
+          grep -q '@import url("./glass.css")' css/summary.css
+          test -s css/glass.css
       - name: Ensure obsolete prototype assets are absent
         shell: bash
         run: |
