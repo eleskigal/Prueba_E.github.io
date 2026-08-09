@@ -3,106 +3,93 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#12375b">
+  <meta name="theme-color" content="#0b2748">
   <title>DCD · Seguimiento de reportes</title>
   <link rel="stylesheet" href="./css/dashboard.css">
 </head>
 <body>
-<svg class="svg-sprite" aria-hidden="true">
-  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5z"/><path d="M9 21v-6h6v6"/></symbol>
-  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
-  <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16M15 4v16"/></symbol>
-  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
-  <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
-  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
-  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
-  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
-  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></symbol>
-  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
-</svg>
-
-<div class="app-shell">
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <div class="brand-mark">DCD</div>
-      <div><strong>Seguimiento</strong><span>Reportes institucionales</span></div>
-    </div>
-    <nav class="nav" aria-label="Navegación principal">
-      <button class="nav-item active" data-view="resumen" aria-current="page"><svg><use href="#i-home"/></svg><span><strong>Resumen</strong><small>Prioridades y alertas</small></span></button>
-      <button class="nav-item" data-view="calendario"><svg><use href="#i-calendar"/></svg><span><strong>Calendario</strong><small>Compromisos y plazos</small></span></button>
-      <button class="nav-item" data-view="matriz"><svg><use href="#i-table"/></svg><span><strong>Matriz</strong><small>Consulta detallada</small></span></button>
-    </nav>
-    <div class="sidebar-foot"><span class="status-dot"></span><span>Fuente conectada</span></div>
-  </aside>
-
-  <main class="main">
-    <header class="topbar">
-      <div>
-        <div class="eyebrow">Dirección de Censos y Demografía</div>
-        <h1 id="page-title">Resumen de seguimiento</h1>
-        <p id="page-subtitle">Lo que requiere atención y próximos compromisos.</p>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">DCD</div>
+        <div><strong>Seguimiento</strong><span>Reportes institucionales</span></div>
       </div>
-      <div class="top-actions">
-        <div class="updated"><span>Actualizado</span><strong id="updated-at">—</strong></div>
-        <button class="icon-btn mobile-menu" id="mobile-menu" aria-label="Abrir navegación"><svg><use href="#i-menu"/></svg></button>
-      </div>
-    </header>
+      <nav class="nav" aria-label="Navegación principal">
+        <button class="nav-item active" data-view="resumen" aria-current="page"><span class="nav-icon">⌂</span><span>Resumen</span></button>
+        <button class="nav-item" data-view="calendario"><span class="nav-icon">□</span><span>Calendario</span></button>
+        <button class="nav-item" data-view="matriz"><span class="nav-icon">≡</span><span>Matriz</span></button>
+      </nav>
+      <div class="sidebar-foot"><span class="status-dot"></span><span>Datos conectados</span></div>
+    </aside>
 
-    <section id="view-resumen" class="view active">
-      <div class="kpi-grid" id="summary-kpis"></div>
-      <div class="dashboard-grid">
-        <section class="panel panel-wide priority-panel">
-          <div class="panel-head"><div><span class="section-kicker">Atención inmediata</span><h2>Alertas prioritarias</h2><p>Ordenadas por criticidad y proximidad al vencimiento.</p></div><button class="text-action" data-go="matriz" data-filter="attention">Ver todas <svg><use href="#i-arrow"/></svg></button></div>
-          <div id="priority-alerts" class="alert-list"></div>
-        </section>
-        <section class="panel">
-          <div class="panel-head"><div><span class="section-kicker">Próximos 30 días</span><h2>Agenda</h2></div><button class="text-action" data-go="calendario">Calendario <svg><use href="#i-arrow"/></svg></button></div>
-          <div id="upcoming-list" class="mini-timeline"></div>
-        </section>
-        <section class="panel">
-          <div class="panel-head"><div><span class="section-kicker">Portafolio</span><h2>Estado general</h2></div></div>
-          <div id="status-breakdown" class="status-breakdown"></div>
-        </section>
-        <section class="panel panel-wide">
-          <div class="panel-head"><div><span class="section-kicker">Gestión</span><h2>Carga abierta por responsable</h2><p>Reportes todavía en gestión.</p></div></div>
-          <div id="owner-load" class="owner-load"></div>
-        </section>
-      </div>
-    </section>
-
-    <section id="view-calendario" class="view">
-      <div class="calendar-toolbar panel">
-        <div class="month-nav"><button class="icon-btn" id="prev-month" aria-label="Mes anterior"><svg><use href="#i-chevron-left"/></svg></button><div><span class="section-kicker">Vencimientos</span><h2 id="calendar-month">—</h2></div><button class="icon-btn" id="next-month" aria-label="Mes siguiente"><svg><use href="#i-chevron-right"/></svg></button></div>
-        <button class="secondary-btn" id="today-month">Mes actual</button>
-      </div>
-      <div class="calendar-layout">
-        <section class="panel calendar-panel"><div class="calendar-weekdays"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span></div><div id="calendar-grid" class="calendar-grid"></div></section>
-        <aside class="panel agenda-panel"><div class="panel-head"><div><span class="section-kicker">Detalle mensual</span><h2>Agenda</h2><p id="agenda-caption">Compromisos del mes seleccionado.</p></div></div><div id="month-agenda" class="agenda-list"></div></aside>
-      </div>
-    </section>
-
-    <section id="view-matriz" class="view">
-      <section class="panel matrix-panel">
-        <div class="matrix-toolbar">
-          <div class="search-wrap"><svg><use href="#i-search"/></svg><input id="buscar" type="search" placeholder="Buscar tema, reporte, responsable o plataforma…" autocomplete="off"></div>
-          <div class="select-wrap"><svg><use href="#i-filter"/></svg><select id="estado"><option value="">Todos los estados</option><option value="vencido">Vencidos</option><option value="critico">Críticos</option><option value="seguimiento">Seguimiento</option><option value="plazo">En plazo</option><option value="cerrado">Entregados</option><option value="sinfecha">Sin fecha</option></select></div>
-          <select id="responsable"><option value="">Todos los responsables</option></select>
-          <select id="actividad"><option value="">Todas las actividades</option></select>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">Dirección de Censos y Demografía</div>
+          <h1 id="page-title">Resumen de seguimiento</h1>
+          <p id="page-subtitle">Prioridades, alertas y próximos compromisos.</p>
         </div>
-        <div class="filter-bar"><div id="active-filters" class="filter-chips"></div><div class="matrix-meta"><span id="matrix-count">—</span><button class="clear-btn" id="clear-filters">Limpiar filtros</button></div></div>
-        <div class="table-scroll">
-          <table>
-            <thead><tr><th>Reporte</th><th>Responsable</th><th>Fecha límite</th><th>Estado</th><th>Plazo</th><th></th></tr></thead>
-            <tbody id="tbody"><tr><td colspan="6" class="empty">Cargando información…</td></tr></tbody>
-          </table>
+        <div class="top-actions">
+          <div class="updated"><span>Actualización</span><strong id="updated-at">—</strong></div>
+          <button class="mobile-menu" id="mobile-menu" aria-label="Abrir navegación">☰</button>
+        </div>
+      </header>
+
+      <section id="view-resumen" class="view active">
+        <div class="kpi-grid" id="summary-kpis"></div>
+        <div class="dashboard-grid">
+          <section class="panel panel-wide">
+            <div class="panel-head"><div><span class="section-kicker">Atención inmediata</span><h2>Alertas prioritarias</h2></div><button class="text-action" data-go="matriz" data-filter="attention">Ver todas →</button></div>
+            <div id="priority-alerts" class="alert-list"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><span class="section-kicker">Próximos 30 días</span><h2>Agenda de vencimientos</h2></div><button class="text-action" data-go="calendario">Calendario →</button></div>
+            <div id="upcoming-list" class="mini-timeline"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><span class="section-kicker">Portafolio</span><h2>Estado de los reportes</h2></div></div>
+            <div id="status-breakdown" class="status-breakdown"></div>
+          </section>
+          <section class="panel panel-wide">
+            <div class="panel-head"><div><span class="section-kicker">Gestión</span><h2>Carga por responsable</h2></div></div>
+            <div id="owner-load" class="owner-load"></div>
+          </section>
         </div>
       </section>
-    </section>
-  </main>
-</div>
 
-<div class="drawer-backdrop" id="drawer-backdrop"></div>
-<aside id="drawer" class="drawer" aria-hidden="true"><button id="close" class="icon-btn drawer-close" aria-label="Cerrar detalle"><svg><use href="#i-close"/></svg></button><div id="drawer-body"></div></aside>
-<script src="./js/app.js"></script>
+      <section id="view-calendario" class="view">
+        <div class="calendar-toolbar panel">
+          <div class="month-nav"><button id="prev-month" aria-label="Mes anterior">←</button><div><span class="section-kicker">Vencimientos</span><h2 id="calendar-month">—</h2></div><button id="next-month" aria-label="Mes siguiente">→</button></div>
+          <button class="secondary-btn" id="today-month">Mes actual</button>
+        </div>
+        <div class="calendar-layout">
+          <section class="panel calendar-panel"><div class="calendar-weekdays"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span></div><div id="calendar-grid" class="calendar-grid"></div></section>
+          <aside class="panel agenda-panel"><div class="panel-head"><div><span class="section-kicker">Detalle mensual</span><h2>Agenda</h2></div></div><div id="month-agenda" class="agenda-list"></div></aside>
+        </div>
+      </section>
+
+      <section id="view-matriz" class="view">
+        <section class="panel matrix-panel">
+          <div class="matrix-toolbar">
+            <div class="search-wrap"><span>⌕</span><input id="buscar" type="search" placeholder="Buscar tema, reporte, responsable o plataforma…"></div>
+            <select id="estado"><option value="">Todos los estados</option><option value="vencido">Vencidos</option><option value="critico">Críticos</option><option value="seguimiento">Seguimiento</option><option value="plazo">En plazo</option><option value="cerrado">Entregados</option><option value="sinfecha">Sin fecha</option></select>
+            <select id="responsable"><option value="">Todos los responsables</option></select>
+            <select id="actividad"><option value="">Todas las actividades</option></select>
+          </div>
+          <div class="matrix-meta"><span id="matrix-count">—</span><button class="clear-btn" id="clear-filters">Limpiar filtros</button></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Reporte</th><th>Responsable</th><th>Fecha límite</th><th>Estado</th><th>Plazo</th><th></th></tr></thead>
+              <tbody id="tbody"><tr><td colspan="6" class="empty">Cargando información…</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+  <aside id="drawer" class="drawer" aria-hidden="true"><button id="close" class="drawer-close" aria-label="Cerrar detalle">×</button><div id="drawer-body"></div></aside>
+  <script src="./js/app.js"></script>
 </body>
 </html>
