@@ -1,0 +1,55 @@
+/* Ajuste de robustez: ninguna tarjeta debe expulsar texto o controles de su superficie. */
+#view-resumen .command-hero > *,
+#view-resumen .hero-metrics > *,
+#view-resumen .priority-card > *,
+#view-resumen .instrument-card > *,
+#view-resumen .timeline-item > *,
+#view-resumen .owner-row > *,
+#view-resumen .status-row > *{min-width:0;max-width:100%}
+
+#view-resumen .command-copy h2,
+#view-resumen .command-copy p,
+#view-resumen .hero-next small,
+#view-resumen .priority-content small,
+#view-resumen .priority-content strong,
+#view-resumen .priority-content span,
+#view-resumen .timeline-copy strong,
+#view-resumen .timeline-copy small,
+#view-resumen .owner-main strong,
+#view-resumen .owner-main small,
+#view-resumen .instrument-top strong,
+#view-resumen .instrument-bottom span,
+#view-resumen .status-label{overflow-wrap:anywhere;word-break:normal}
+
+#view-resumen .instrument-top strong{white-space:normal;line-height:1.35}
+#view-resumen .instrument-top em{flex:0 0 auto;white-space:nowrap}
+#view-resumen .instrument-bottom{align-items:flex-start}
+#view-resumen .instrument-bottom span:last-child{text-align:right}
+#view-resumen .priority-card{grid-template-columns:38px minmax(0,1fr) max-content}
+#view-resumen .status-pill{max-width:120px;white-space:normal;text-align:center;justify-content:center;line-height:1.2}
+#view-resumen .timeline-item{grid-template-columns:44px minmax(0,1fr) max-content}
+#view-resumen .timeline-days{white-space:nowrap}
+#view-resumen .owner-row{grid-template-columns:minmax(120px,190px) minmax(70px,1fr) 42px}
+#view-resumen .status-row{grid-template-columns:minmax(0,1fr) minmax(50px,1.25fr) 28px}
+
+.matrix-toolbar{grid-template-columns:minmax(260px,1.65fr) repeat(4,minmax(145px,.65fr));align-items:center}
+.matrix-toolbar select,.matrix-toolbar input{min-width:0;width:100%}
+
+@media(max-width:1240px){
+  .matrix-toolbar{grid-template-columns:minmax(240px,1.4fr) repeat(2,minmax(150px,1fr))}
+  .matrix-toolbar .search-wrap{grid-column:1/-1}
+}
+@media(max-width:900px){
+  .matrix-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #view-resumen .priority-card{grid-template-columns:34px minmax(0,1fr)}
+  #view-resumen .priority-card .status-pill{grid-column:2;justify-self:start}
+}
+@media(max-width:620px){
+  .matrix-toolbar{grid-template-columns:1fr}
+  .matrix-toolbar .search-wrap{grid-column:auto}
+  #view-resumen .hero-metrics{grid-template-columns:1fr}
+  #view-resumen .priority-card,#view-resumen .timeline-item,#view-resumen .owner-row,#view-resumen .status-row{grid-template-columns:1fr}
+  #view-resumen .priority-index{display:none}
+  #view-resumen .priority-card .status-pill{grid-column:auto}
+  #view-resumen .owner-count{text-align:left}
+}

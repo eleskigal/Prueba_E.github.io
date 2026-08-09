@@ -1,161 +1,27 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#102f4a">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#102f4a">
   <title>DCD · Control de gestión de reportes</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/app.css">
-  <link rel="stylesheet" href="./css/summary.css">
-  <link rel="stylesheet" href="./css/glass.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/app.css"><link rel="stylesheet" href="./css/summary.css"><link rel="stylesheet" href="./css/glass.css"><link rel="stylesheet" href="./css/layout-fix.css">
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <div class="brand-mark">DCD</div>
-        <div><strong>Control de gestión</strong><span>Dirección de Censos y Demografía</span></div>
-      </div>
-      <nav class="nav" aria-label="Navegación principal">
-        <button class="nav-item active" data-view="resumen" aria-current="page"><span class="nav-icon">01</span><span>Resumen</span></button>
-        <button class="nav-item" data-view="calendario"><span class="nav-icon">02</span><span>Calendario</span></button>
-        <button class="nav-item" data-view="matriz"><span class="nav-icon">03</span><span>Matriz</span></button>
-      </nav>
-      <div class="sidebar-foot"><span class="status-dot"></span><span>Fuente de seguimiento conectada</span></div>
-    </aside>
-
+    <aside class="sidebar" id="sidebar"><div class="brand"><div class="brand-mark">DCD</div><div><strong>Control de gestión</strong><span>Dirección de Censos y Demografía</span></div></div><nav class="nav" aria-label="Navegación principal"><button class="nav-item active" data-view="resumen" aria-current="page"><span class="nav-icon">01</span><span>Resumen</span></button><button class="nav-item" data-view="calendario"><span class="nav-icon">02</span><span>Calendario</span></button><button class="nav-item" data-view="matriz"><span class="nav-icon">03</span><span>Matriz</span></button></nav><div class="sidebar-foot"><span class="status-dot"></span><span>Fuente de seguimiento conectada</span></div></aside>
     <main class="main">
-      <header class="topbar">
-        <div>
-          <div class="eyebrow">Dirección de Censos y Demografía</div>
-          <h1 id="page-title">Control de gestión</h1>
-          <p id="page-subtitle">Qué requiere atención, quién responde y cuál es el próximo hito.</p>
-        </div>
-        <div class="top-actions">
-          <div class="updated"><span>Corte de información</span><strong id="updated-at">—</strong></div>
-          <div class="export-wrap">
-            <button class="export-toggle" id="export-toggle" aria-haspopup="menu" aria-expanded="false"><span>Exportar</span><i>⌄</i></button>
-            <div class="export-menu" id="export-menu" role="menu" aria-label="Formatos de exportación">
-              <button role="menuitem" data-export="xlsx"><span class="export-format">XLSX</span><span><strong>Matriz de seguimiento</strong><small>Estructura operativa para trabajo en Excel</small></span><b>↗</b></button>
-              <button role="menuitem" data-export="pdf"><span class="export-format">PDF</span><span><strong>Resumen editorial</strong><small>Documento ejecutivo listo para impresión</small></span><b>↗</b></button>
-              <button role="menuitem" data-export="csv"><span class="export-format">CSV</span><span><strong>Datos interoperables</strong><small>Base plana para análisis y reutilización</small></span><b>↗</b></button>
-            </div>
-          </div>
-          <button class="mobile-menu" id="mobile-menu" aria-label="Abrir navegación">☰</button>
-        </div>
-      </header>
-
+      <header class="topbar"><div><div class="eyebrow">Dirección de Censos y Demografía</div><h1 id="page-title">Control de gestión</h1><p id="page-subtitle">Qué requiere atención, quién responde y cuál es el próximo hito.</p></div><div class="top-actions"><div class="updated"><span>Corte de información</span><strong id="updated-at">—</strong></div><div class="export-wrap"><button class="export-toggle" id="export-toggle" aria-haspopup="menu" aria-expanded="false"><span>Exportar</span><i>⌄</i></button><div class="export-menu" id="export-menu" role="menu" aria-label="Formatos de exportación"><button role="menuitem" data-export="xlsx"><span class="export-format">XLSX</span><span><strong>Matriz de seguimiento</strong><small>Estructura operativa para trabajo en Excel</small></span><b>↗</b></button><button role="menuitem" data-export="pdf"><span class="export-format">PDF</span><span><strong>Resumen editorial</strong><small>Documento ejecutivo listo para impresión</small></span><b>↗</b></button><button role="menuitem" data-export="csv"><span class="export-format">CSV</span><span><strong>Datos interoperables</strong><small>Base plana para análisis y reutilización</small></span><b>↗</b></button></div></div><button class="mobile-menu" id="mobile-menu" aria-label="Abrir navegación">☰</button></div></header>
       <section id="view-resumen" class="view active">
-        <section class="story-chapter story-situation" aria-labelledby="story-situation-title">
-          <div class="story-heading">
-            <span class="story-number">01</span>
-            <div><span class="section-kicker">Situación actual</span><h2 id="story-situation-title">¿Qué necesita decisión hoy?</h2><p>Una lectura ejecutiva de la señal más urgente y del nivel general de cumplimiento.</p></div>
-          </div>
-          <section class="command-hero panel">
-            <div class="command-copy">
-              <span class="section-kicker">Señal principal</span>
-              <h2 id="hero-title">Cargando prioridades…</h2>
-              <p id="hero-copy">La vista prioriza compromisos por vencimiento, estado y cercanía de la fecha límite.</p>
-              <div class="hero-actions">
-                <button class="primary-btn" id="hero-primary">Abrir registro prioritario</button>
-                <button class="secondary-btn" data-go="matriz" data-filter="attention">Revisar cartera pendiente</button>
-              </div>
-            </div>
-            <div class="hero-metrics">
-              <div class="progress-orbit" id="progress-orbit"><div><strong id="hero-rate">—</strong><span>cumplimiento</span></div></div>
-              <div class="hero-next"><span>Próximo vencimiento</span><strong id="hero-next-date">—</strong><small id="hero-next-label">Sin información</small></div>
-            </div>
-          </section>
-          <div class="kpi-grid" id="summary-kpis"></div>
-        </section>
-
-        <section class="story-chapter story-risk" aria-labelledby="story-risk-title">
-          <div class="story-heading">
-            <span class="story-number">02</span>
-            <div><span class="section-kicker">Concentración del riesgo</span><h2 id="story-risk-title">¿Dónde se concentra la gestión pendiente?</h2><p>Prioriza los compromisos que requieren intervención y ubica los instrumentos que acumulan mayor carga abierta.</p></div>
-          </div>
-          <div class="story-risk-grid">
-            <section class="panel priority-panel">
-              <div class="panel-head"><div><span class="section-kicker">Atención inmediata</span><h2>Prioridades operativas</h2></div><button class="text-action" data-go="matriz" data-filter="attention">Ver cartera →</button></div>
-              <div id="priority-alerts" class="priority-stack"></div>
-            </section>
-            <section class="panel instruments-panel">
-              <div class="panel-head"><div><span class="section-kicker">Distribución</span><h2>Instrumentos</h2></div><span class="panel-hint">Selecciona para filtrar</span></div>
-              <div id="instrument-map" class="instrument-map"></div>
-            </section>
-          </div>
-        </section>
-
-        <section class="story-chapter story-forward" aria-labelledby="story-forward-title">
-          <div class="story-heading">
-            <span class="story-number">03</span>
-            <div><span class="section-kicker">Próximo movimiento</span><h2 id="story-forward-title">¿Qué ocurre después y quién debe moverlo?</h2><p>Ordena el horizonte próximo y permite identificar rápidamente responsables con carga o riesgo.</p></div>
-          </div>
-          <div class="story-forward-grid">
-            <section class="panel upcoming-panel">
-              <div class="panel-head"><div><span class="section-kicker">Horizonte 30 días</span><h2>Hitos próximos</h2></div><button class="text-action" data-go="calendario">Abrir calendario →</button></div>
-              <div id="upcoming-list" class="mini-timeline"></div>
-            </section>
-            <section class="panel owners-panel">
-              <div class="panel-head"><div><span class="section-kicker">Carga y riesgo</span><h2>Responsables</h2></div><span class="panel-hint">Abiertos / total</span></div>
-              <div id="owner-load" class="owner-load"></div>
-            </section>
-          </div>
-        </section>
-
-        <section class="story-chapter story-context" aria-labelledby="story-context-title">
-          <div class="story-heading">
-            <span class="story-number">04</span>
-            <div><span class="section-kicker">Lectura de cartera</span><h2 id="story-context-title">¿Cómo queda el portafolio después de priorizar?</h2><p>Cierra la narrativa con la composición de estados y permite profundizar en cualquier grupo con un clic.</p></div>
-          </div>
-          <div class="story-context-grid">
-            <section class="panel status-panel">
-              <div class="panel-head"><div><span class="section-kicker">Portafolio</span><h2>Estado de los reportes</h2></div><span class="panel-hint">Selecciona un estado</span></div>
-              <div id="status-breakdown" class="status-breakdown"></div>
-            </section>
-          </div>
-        </section>
+        <section class="story-chapter story-situation" aria-labelledby="story-situation-title"><div class="story-heading"><span class="story-number">01</span><div><span class="section-kicker">Situación actual</span><h2 id="story-situation-title">¿Qué necesita decisión hoy?</h2><p>Una lectura ejecutiva de la señal más urgente y del nivel general de cumplimiento.</p></div></div><section class="command-hero panel"><div class="command-copy"><span class="section-kicker">Señal principal</span><h2 id="hero-title">Cargando prioridades…</h2><p id="hero-copy">La vista prioriza compromisos por vencimiento, estado y cercanía de la fecha límite.</p><div class="hero-actions"><button class="primary-btn" id="hero-primary">Abrir registro prioritario</button><button class="secondary-btn" data-go="matriz" data-filter="attention">Revisar cartera pendiente</button></div></div><div class="hero-metrics"><div class="progress-orbit" id="progress-orbit"><div><strong id="hero-rate">—</strong><span>cumplimiento</span></div></div><div class="hero-next"><span>Próximo vencimiento</span><strong id="hero-next-date">—</strong><small id="hero-next-label">Sin información</small></div></div></section><div class="kpi-grid" id="summary-kpis"></div></section>
+        <section class="story-chapter story-risk" aria-labelledby="story-risk-title"><div class="story-heading"><span class="story-number">02</span><div><span class="section-kicker">Concentración del riesgo</span><h2 id="story-risk-title">¿Dónde se concentra la gestión pendiente?</h2><p>Prioriza los compromisos que requieren intervención y ubica los instrumentos que acumulan mayor carga abierta.</p></div></div><div class="story-risk-grid"><section class="panel priority-panel"><div class="panel-head"><div><span class="section-kicker">Atención inmediata</span><h2>Prioridades operativas</h2></div><button class="text-action" data-go="matriz" data-filter="attention">Ver cartera →</button></div><div id="priority-alerts" class="priority-stack"></div></section><section class="panel instruments-panel"><div class="panel-head"><div><span class="section-kicker">Distribución</span><h2>Instrumentos</h2></div><span class="panel-hint">Selecciona para filtrar</span></div><div id="instrument-map" class="instrument-map"></div></section></div></section>
+        <section class="story-chapter story-forward" aria-labelledby="story-forward-title"><div class="story-heading"><span class="story-number">03</span><div><span class="section-kicker">Próximo movimiento</span><h2 id="story-forward-title">¿Qué ocurre después y quién debe moverlo?</h2><p>Ordena el horizonte próximo y permite identificar rápidamente responsables con carga o riesgo.</p></div></div><div class="story-forward-grid"><section class="panel upcoming-panel"><div class="panel-head"><div><span class="section-kicker">Horizonte 30 días</span><h2>Hitos próximos</h2></div><button class="text-action" data-go="calendario">Abrir calendario →</button></div><div id="upcoming-list" class="mini-timeline"></div></section><section class="panel owners-panel"><div class="panel-head"><div><span class="section-kicker">Carga y riesgo</span><h2>Responsables</h2></div><span class="panel-hint">Abiertos / total</span></div><div id="owner-load" class="owner-load"></div></section></div></section>
+        <section class="story-chapter story-context" aria-labelledby="story-context-title"><div class="story-heading"><span class="story-number">04</span><div><span class="section-kicker">Lectura de cartera</span><h2 id="story-context-title">¿Cómo queda el portafolio después de priorizar?</h2><p>Cierra la narrativa con la composición de estados y permite profundizar en cualquier grupo con un clic.</p></div></div><div class="story-context-grid"><section class="panel status-panel"><div class="panel-head"><div><span class="section-kicker">Portafolio</span><h2>Estado de los reportes</h2></div><span class="panel-hint">Selecciona un estado</span></div><div id="status-breakdown" class="status-breakdown"></div></section></div></section>
       </section>
-
-      <section id="view-calendario" class="view">
-        <div class="calendar-toolbar panel">
-          <div class="month-nav"><button id="prev-month" aria-label="Mes anterior">←</button><div><span class="section-kicker">02 / Agenda de vencimientos</span><h2 id="calendar-month">—</h2></div><button id="next-month" aria-label="Mes siguiente">→</button></div>
-          <button class="secondary-btn" id="today-month">Volver al mes actual</button>
-        </div>
-        <div class="calendar-layout">
-          <section class="panel calendar-panel"><div class="calendar-weekdays"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span></div><div id="calendar-grid" class="calendar-grid"></div></section>
-          <aside class="panel agenda-panel"><div class="panel-head"><div><span class="section-kicker">Detalle mensual</span><h2>Agenda</h2></div></div><div id="month-agenda" class="agenda-list"></div></aside>
-        </div>
-      </section>
-
-      <section id="view-matriz" class="view">
-        <section class="panel matrix-panel">
-          <div class="matrix-toolbar">
-            <div class="search-wrap"><span>⌕</span><input id="buscar" type="search" placeholder="Buscar reporte, instrumento, acción, responsable o plataforma…"></div>
-            <select id="estado"><option value="">Todos los estados</option><option value="vencido">Vencidos</option><option value="critico">Críticos</option><option value="seguimiento">Seguimiento</option><option value="plazo">En plazo</option><option value="cerrado">Entregados</option><option value="sinfecha">Sin fecha</option></select>
-            <select id="responsable"><option value="">Todos los responsables</option></select>
-            <select id="instrumento"><option value="">Todos los instrumentos</option></select>
-          </div>
-          <div class="matrix-meta"><span id="matrix-count">—</span><button class="clear-btn" id="clear-filters">Restablecer filtros</button></div>
-          <div class="table-scroll">
-            <table>
-              <thead><tr><th>Reporte</th><th>Instrumento</th><th>Acción</th><th>Responsable</th><th>Fecha límite</th><th>Estado</th><th>Plazo</th><th></th></tr></thead>
-              <tbody id="tbody"><tr><td colspan="8" class="empty">Cargando información…</td></tr></tbody>
-            </table>
-          </div>
-        </section>
-      </section>
+      <section id="view-calendario" class="view"><div class="calendar-toolbar panel"><div class="month-nav"><button id="prev-month" aria-label="Mes anterior">←</button><div><span class="section-kicker">02 / Agenda de vencimientos</span><h2 id="calendar-month">—</h2></div><button id="next-month" aria-label="Mes siguiente">→</button></div><button class="secondary-btn" id="today-month">Volver al mes actual</button></div><div class="calendar-layout"><section class="panel calendar-panel"><div class="calendar-weekdays"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span></div><div id="calendar-grid" class="calendar-grid"></div></section><aside class="panel agenda-panel"><div class="panel-head"><div><span class="section-kicker">Detalle mensual</span><h2>Agenda</h2></div></div><div id="month-agenda" class="agenda-list"></div></aside></div></section>
+      <section id="view-matriz" class="view"><section class="panel matrix-panel"><div class="matrix-toolbar"><div class="search-wrap"><span>⌕</span><input id="buscar" type="search" placeholder="Buscar reporte, instrumento, acción, responsable o plataforma…"></div><select id="trimestre" aria-label="Filtrar por trimestre"><option value="">Todos los trimestres</option><option value="1">T1 · Ene–Mar</option><option value="2">T2 · Abr–Jun</option><option value="3">T3 · Jul–Sep</option><option value="4">T4 · Oct–Dic</option><option value="sinfecha">Sin fecha</option></select><select id="estado"><option value="">Todos los estados</option><option value="vencido">Vencidos</option><option value="critico">Críticos</option><option value="seguimiento">Seguimiento</option><option value="plazo">En plazo</option><option value="cerrado">Entregados</option><option value="sinfecha">Sin fecha</option></select><select id="responsable"><option value="">Todos los responsables</option></select><select id="instrumento"><option value="">Todos los instrumentos</option></select></div><div class="matrix-meta"><span id="matrix-count">—</span><button class="clear-btn" id="clear-filters">Restablecer filtros</button></div><div class="table-scroll"><table><thead><tr><th>Reporte</th><th>Instrumento</th><th>Acción</th><th>Responsable</th><th>Fecha límite</th><th>Estado</th><th>Plazo</th><th></th></tr></thead><tbody id="tbody"><tr><td colspan="8" class="empty">Cargando información…</td></tr></tbody></table></div></section></section>
     </main>
   </div>
-
-  <div class="drawer-backdrop" id="drawer-backdrop"></div>
-  <aside id="drawer" class="drawer" aria-hidden="true"><button id="close" class="drawer-close" aria-label="Cerrar detalle">×</button><div id="drawer-body"></div></aside>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="./js/source-overrides.js"></script>
-  <script src="./js/app.js"></script>
-  <script src="./js/export.js"></script>
+  <div class="drawer-backdrop" id="drawer-backdrop"></div><aside id="drawer" class="drawer" aria-hidden="true"><button id="close" class="drawer-close" aria-label="Cerrar detalle">×</button><div id="drawer-body"></div></aside>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="./js/source-overrides.js"></script><script src="./js/app.js"></script><script src="./js/quarter-filter.js"></script><script src="./js/export.js"></script>
 </body>
 </html>
