@@ -74,7 +74,7 @@
     let startWidth = 0;
 
     const move = (event) => {
-      const x = event.clientX ?? event.touches?.[0]?.clientX;
+      const x = event.clientX;
       if (typeof x !== 'number') return;
       setWidth(index, startWidth + (x - startX), false);
     };
@@ -127,8 +127,23 @@
     });
   });
 
-  const reset = document.querySelector('#reset-columns');
-  reset?.addEventListener('click', () => {
+  const meta = document.querySelector('#view-matriz .matrix-meta');
+  if (meta && !document.querySelector('#reset-columns')) {
+    const existing = [...meta.children].filter((node) => node.id !== 'matrix-count');
+    const actions = document.createElement('div');
+    actions.className = 'matrix-actions';
+    existing.forEach((node) => actions.appendChild(node));
+    const reset = document.createElement('button');
+    reset.id = 'reset-columns';
+    reset.className = 'matrix-columns-reset';
+    reset.type = 'button';
+    reset.textContent = 'Restablecer columnas';
+    reset.title = 'Volver a los anchos recomendados';
+    actions.prepend(reset);
+    meta.appendChild(actions);
+  }
+
+  document.querySelector('#reset-columns')?.addEventListener('click', () => {
     DEFAULTS.forEach((value, index) => { widths[index] = value; });
     localStorage.removeItem(STORAGE_KEY);
     apply();
