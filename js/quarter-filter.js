@@ -33,4 +33,10 @@
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bind, { once: true });
   else bind();
+
+  // Control de layout independiente: el visor sigue operativo aun si esta capa no carga.
+  const sidebarController = document.createElement("script");
+  sidebarController.src = "./js/sidebar.js";
+  sidebarController.defer = true;
+  document.head.appendChild(sidebarController);
 })();
