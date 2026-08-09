@@ -35,6 +35,14 @@
         </div>
         <div class="top-actions">
           <div class="updated"><span>Corte de información</span><strong id="updated-at">—</strong></div>
+          <div class="export-wrap">
+            <button class="export-toggle" id="export-toggle" aria-haspopup="menu" aria-expanded="false"><span>Exportar</span><i>⌄</i></button>
+            <div class="export-menu" id="export-menu" role="menu" aria-label="Formatos de exportación">
+              <button role="menuitem" data-export="xlsx"><span class="export-format">XLSX</span><span><strong>Matriz de seguimiento</strong><small>Estructura operativa para trabajo en Excel</small></span><b>↗</b></button>
+              <button role="menuitem" data-export="pdf"><span class="export-format">PDF</span><span><strong>Resumen editorial</strong><small>Documento ejecutivo listo para impresión</small></span><b>↗</b></button>
+              <button role="menuitem" data-export="csv"><span class="export-format">CSV</span><span><strong>Datos interoperables</strong><small>Base plana para análisis y reutilización</small></span><b>↗</b></button>
+            </div>
+          </div>
           <button class="mobile-menu" id="mobile-menu" aria-label="Abrir navegación">☰</button>
         </div>
       </header>
@@ -144,7 +152,9 @@
 
   <div class="drawer-backdrop" id="drawer-backdrop"></div>
   <aside id="drawer" class="drawer" aria-hidden="true"><button id="close" class="drawer-close" aria-label="Cerrar detalle">×</button><div id="drawer-body"></div></aside>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="./js/source-overrides.js"></script>
   <script src="./js/app.js"></script>
+  <script src="./js/export.js"></script>
 </body>
 </html>
