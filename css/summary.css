@@ -1,4 +1,3 @@
-@import url("./glass.css");
 /* Hoja 1 · narrativa estratégica. Capa aislada: solo Resumen + tipografía. */
 :root{--story-ink:#14212b;--story-muted:#667580;--story-navy:#123b5a;--story-blue:#2d678f;--story-gold:#b68b3f;--story-card:#fffefa;--story-line:#d9d6cf}
 body,button,input,select{font-family:"IBM Plex Sans",Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}h1,.command-copy h2,.progress-orbit strong,.hero-next strong,.kpi-value,.priority-index,.date-chip strong{font-family:"IBM Plex Serif",Georgia,"Times New Roman",serif}
