@@ -64,11 +64,17 @@ jobs:
           test -s automation/setup_windows.ps1
           test -s automation/start_watcher.ps1
           test -s automation/publish_once.ps1
-      - name: Validate matrix resizer hooks
+      - name: Validate matrix interaction layer
         shell: bash
         run: |
           grep -q "column-resizer" css/matrix-table.css
-          grep -q "dcd-matrix-column-widths-v1" js/matrix-table.js
+          grep -q "position:sticky" css/matrix-table.css
+          grep -q "sortable-column" css/matrix-table.css
+          grep -q "dcd-matrix-column-widths-v2" js/matrix-table.js
+          grep -q "Todos los temas" js/matrix-table.js
+          grep -q "Todas las plataformas" js/matrix-table.js
+          grep -q "matrix-observations-cell" js/matrix-table.js
+          grep -q "sortState" js/matrix-table.js
           grep -q "Restablecer columnas" js/matrix-table.js
       - name: Ensure obsolete prototype assets are absent
         shell: bash
