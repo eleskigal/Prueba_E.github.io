@@ -14,18 +14,18 @@ REQUIRED = [
     "Tipo de Reporte/Actividad", "Tema", "Plataforma",
     "Responsable de información", "Periodicidad",
     "Fecha Límite - Dep solicitante", "Fecha de Reporte Interno",
-    "Fecha de Entrega Solicitante", "Estado del Reporte"
+    "Fecha de Entrega Solicitante", "Estado del Reporte", "Enlaces"
 ]
 
-PUBLIC_COLUMNS = {
-    "Tipo de Reporte/Actividad": "tipo_actividad",
+SOURCE_TO_OUTPUT = {
+    "Tipo de Reporte/Actividad": "instrumento",
     "Tema": "tema",
     "Plataforma": "plataforma",
     "Responsable de información": "responsable",
     "Periodicidad": "periodicidad",
     "Tipo de Reporte": "tipo_reporte",
-    "Nombre del Reporte": "nombre_reporte",
-    "Descripción": "descripcion",
+    "Nombre del Reporte": "accion",
+    "Descripción": "descripcion_accion",
     "Periodicidad del Reporte": "periodicidad_reporte",
     "Dependencia Solicitante": "dependencia_solicitante",
     "Fecha Límite - Dep solicitante": "fecha_limite",
@@ -97,21 +97,15 @@ def build_records(df):
         excel_row = int(idx) + 3
         if not is_operational(row):
             continue
+
         record = {"id": stable_id(row, excel_row), "fila_fuente": excel_row}
-        for source, target in PUBLIC_COLUMNS.items():
+        for source, target in SOURCE_TO_OUTPUT.items():
             value = row.get(source)
             record[target] = iso_date(value) if source in DATE_COLUMNS else clean(value)
 
-        record["nombre_reporte"] = None if record["nombre_reporte"] is None else str(record["nombre_reporte"])
+        if record["accion"] is not None:
+            record["accion"] = str(record["accion"])
         record["estado_fuente"] = record["estado_fuente"] or "Sin estado"
-
-        # Campos semánticos explícitos para la interfaz.
-        record["instrumento"] = record["tipo_actividad"]
-        record["accion"] = record["nombre_reporte"]
-        record["accion_descripcion"] = record["descripcion"]
-
-        # Los enlaces de evidencia se conservan. El control de acceso continúa
-        # en SharePoint/OneDrive u otro sistema de origen; el visor no evade permisos.
         record["evidencia_disponible"] = record["evidencia_url"] is not None
         records.append(record)
     return records
@@ -137,7 +131,12 @@ def main():
         "source_file": INPUT.name,
         "source_sheet": SHEET,
         "records": len(records),
-        "privacy": "Usuario Reportado no se publica. Los enlaces de evidencia se conservan y mantienen el control de acceso del sistema de origen.",
+        "privacy": "Usuario Reportado no se publica. Las URLs de evidencia se conservan, pero el acceso continúa gobernado por SharePoint/OneDrive u otro sistema de origen.",
+        "semantic_fields": {
+            "instrumento": "Tipo de Reporte/Actividad",
+            "accion": "Nombre del Reporte",
+            "descripcion_accion": "Descripción"
+        }
     }
     META.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"OK · {len(records)} registros exportados a {OUTPUT}")
