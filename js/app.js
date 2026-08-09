@@ -1,5 +1,9 @@
-const $=(s)=>document.querySelector(s);const $$=(s)=>[...document.querySelectorAll(s)];
-let REPORTES=[];let CAL_DATE=new Date();let quickAttention=false;
+const $=(s)=>document.querySelector(s);
+const $$=(s)=>[...document.querySelectorAll(s)];
+let REPORTES=[];
+let CAL_DATE=new Date();
+let quickAttention=false;
+
 const TODAY=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
 const parseDate=v=>v?new Date(v+'T00:00:00'):null;
 const daysTo=v=>{const d=parseDate(v);return d===null?null:Math.ceil((d-TODAY())/86400000)};
@@ -7,17 +11,164 @@ const safe=v=>v??'—';
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const fmtDate=(v,opt={day:'2-digit',month:'short',year:'numeric'})=>v?new Intl.DateTimeFormat('es-CO',opt).format(parseDate(v)):'—';
 const monthName=d=>new Intl.DateTimeFormat('es-CO',{month:'long',year:'numeric'}).format(d).replace(/^./,c=>c.toUpperCase());
-function state(r){const f=(r.estado_fuente||'').trim().toLowerCase();if(f==='entregado')return{key:'cerrado',label:'Entregado',rank:9};if(f==='atrasado')return{key:'vencido',label:'Atrasado',rank:0};const d=daysTo(r.fecha_limite);if(d===null){if(f==='en proceso')return{key:'seguimiento',label:'En proceso',rank:4};if(f==='pendiente')return{key:'sinfecha',label:'Pendiente · sin fecha',rank:3};return{key:'sinfecha',label:r.estado_fuente||'Sin estado',rank:5}}if(d<0)return{key:'vencido',label:'Vencido',rank:0};if(d===0)return{key:'critico',label:'Vence hoy',rank:1};if(d<=3)return{key:'critico',label:'Crítico',rank:1};if(d<=7)return{key:'seguimiento',label:'Seguimiento',rank:2};return{key:'plazo',label:f==='en proceso'?'En proceso':'En plazo',rank:6}}
-function enriched(){return REPORTES.map(r=>({...r,estado:state(r),dias:daysTo(r.fecha_limite)}))}
-function titleOf(r){return r.tema||r.nombre_reporte||r.tipo_actividad||'Registro sin tema'}
-function secondaryOf(r){return[r.tipo_actividad,r.plataforma,r.nombre_reporte].filter(Boolean).join(' · ')}
+
+function state(r){
+  const f=(r.estado_fuente||'').trim().toLowerCase();
+  if(f==='entregado')return{key:'cerrado',label:'Entregado',rank:9};
+  if(f==='atrasado')return{key:'vencido',label:'Atrasado',rank:0};
+  const d=daysTo(r.fecha_limite);
+  if(d===null){
+    if(f==='en proceso')return{key:'seguimiento',label:'En proceso',rank:4};
+    if(f==='pendiente')return{key:'sinfecha',label:'Pendiente · sin fecha',rank:3};
+    return{key:'sinfecha',label:r.estado_fuente||'Sin estado',rank:5};
+  }
+  if(d<0)return{key:'vencido',label:'Vencido',rank:0};
+  if(d===0)return{key:'critico',label:'Vence hoy',rank:1};
+  if(d<=3)return{key:'critico',label:'Crítico',rank:1};
+  if(d<=7)return{key:'seguimiento',label:'Seguimiento',rank:2};
+  return{key:'plazo',label:f==='en proceso'?'En proceso':'En plazo',rank:6};
+}
+
+function instrumentOf(r){return r.instrumento||r.tipo_actividad||'Sin instrumento'}
+function actionOf(r){return r.accion||r.nombre_reporte||null}
+function actionDescriptionOf(r){return r.accion_descripcion||r.descripcion||null}
+function titleOf(r){return r.tema||r.nombre_reporte||instrumentOf(r)||'Registro sin tema'}
+function instrumentAction(r){
+  const i=instrumentOf(r),a=actionOf(r);
+  return a?`${i} · ${a}`:i;
+}
+function secondaryOf(r){return[instrumentAction(r),r.tipo_reporte,r.plataforma].filter(Boolean).join(' · ')}
+function calendarLabel(r){
+  const i=instrumentOf(r),a=actionOf(r);
+  if(a)return`${i} · ${a}`;
+  return r.nombre_reporte||titleOf(r);
+}
+function evidenceHref(r){
+  const u=r.evidencia_url;
+  if(!u||typeof u!=='string')return null;
+  return /^(https?:\/\/)/i.test(u)?u:null;
+}
+function enriched(){return REPORTES.map(r=>({...r,instrumento:instrumentOf(r),accion:actionOf(r),estado:state(r),dias:daysTo(r.fecha_limite)}))}
 function dueText(r){if(r.estado.key==='cerrado')return'Cerrado';if(r.dias===null)return'Sin fecha';if(r.dias<0)return`${Math.abs(r.dias)} d vencido`;if(r.dias===0)return'Hoy';return`${r.dias} d`}
-function go(view){$$('.nav-item').forEach(b=>{const on=b.dataset.view===view;b.classList.toggle('active',on);b.toggleAttribute('aria-current',on)});$$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${view}`));const copy={resumen:['Resumen de seguimiento','Prioridades, alertas y próximos compromisos.'],calendario:['Calendario de compromisos','Vencimientos y entregas organizados en el tiempo.'],matriz:['Matriz de seguimiento','Consulta, filtra y revisa el detalle de todos los reportes.']}[view];$('#page-title').textContent=copy[0];$('#page-subtitle').textContent=copy[1];history.replaceState(null,'',`#${view}`);$('#sidebar').classList.remove('open');if(view==='calendario')renderCalendar();if(view==='matriz')renderMatrix()}
-function renderSummary(){const all=enriched();const open=all.filter(r=>r.estado.key!=='cerrado');const overdue=all.filter(r=>r.estado.key==='vencido');const critical=all.filter(r=>r.estado.key==='critico');const upcoming=all.filter(r=>r.dias!==null&&r.dias>=0&&r.dias<=30&&r.estado.key!=='cerrado');const closed=all.filter(r=>r.estado.key==='cerrado');const rate=all.length?Math.round(closed.length/all.length*100):0;const kpis=[['Vencidos',overdue.length,'Requieren gestión inmediata','red'],['Próximos 7 días',critical.length+all.filter(r=>r.estado.key==='seguimiento'&&r.dias!==null&&r.dias<=7).length,'Compromisos por monitorear','amber'],['Cumplimiento',`${rate}%`,`${closed.length} de ${all.length} entregados`,'green'],['Abiertos',open.length,'Reportes aún en gestión','blue']];$('#summary-kpis').innerHTML=kpis.map(k=>`<article class="kpi-card"><span class="kpi-accent ${k[3]}"></span><span class="kpi-label">${k[0]}</span><div class="kpi-value">${k[1]}</div><div class="kpi-note">${k[2]}</div></article>`).join('');const priority=open.filter(r=>['vencido','critico','seguimiento','sinfecha'].includes(r.estado.key)).sort((a,b)=>a.estado.rank-b.estado.rank||(a.dias??9999)-(b.dias??9999)).slice(0,6);$('#priority-alerts').innerHTML=priority.length?priority.map(r=>`<article class="alert-item" onclick="detail('${r.id}')"><div class="alert-marker ${r.estado.key}">${r.estado.key==='vencido'?'!':r.estado.key==='critico'?'!':r.estado.key==='seguimiento'?'↗':'?'}</div><div class="alert-copy"><strong>${esc(titleOf(r))}</strong><small>${esc(r.responsable||'Sin responsable')} · ${esc(r.plataforma||'Sin plataforma')}</small></div><div class="alert-side"><strong>${esc(r.estado.label)}</strong><small>${r.fecha_limite?fmtDate(r.fecha_limite,{day:'2-digit',month:'short'}):'Sin fecha límite'}</small></div></article>`).join(''):`<div class="empty">No hay alertas prioritarias.</div>`;const next=upcoming.sort((a,b)=>a.dias-b.dias).slice(0,6);$('#upcoming-list').innerHTML=next.length?next.map(r=>{const d=parseDate(r.fecha_limite);return`<div class="timeline-item" onclick="detail('${r.id}')"><div class="date-chip"><strong>${d.getDate()}</strong><span>${new Intl.DateTimeFormat('es-CO',{month:'short'}).format(d)}</span></div><div class="timeline-copy"><strong>${esc(titleOf(r))}</strong><small>${esc(r.responsable||'Sin responsable')} · ${dueText(r)}</small></div></div>`}).join(''):`<div class="empty">Sin vencimientos en los próximos 30 días.</div>`;const statuses=[['Entregados','cerrado'],['En plazo','plazo'],['Seguimiento','seguimiento'],['Críticos','critico'],['Vencidos','vencido'],['Sin fecha','sinfecha']].map(([label,key])=>[label,key,all.filter(r=>r.estado.key===key).length]);const max=Math.max(...statuses.map(x=>x[2]),1);$('#status-breakdown').innerHTML=statuses.map(s=>`<div class="status-row"><span>${s[0]}</span><div class="status-track"><div class="status-fill" style="width:${s[2]/max*100}%"></div></div><strong>${s[2]}</strong></div>`).join('');const owners=[...new Set(all.map(r=>r.responsable).filter(Boolean))].map(o=>[o,all.filter(r=>r.responsable===o&&r.estado.key!=='cerrado').length,all.filter(r=>r.responsable===o).length]).sort((a,b)=>b[1]-a[1]||b[2]-a[2]).slice(0,8);const om=Math.max(...owners.map(x=>x[1]),1);$('#owner-load').innerHTML=owners.map(o=>`<div class="owner-row"><div class="owner-name" title="${esc(o[0])}">${esc(o[0])}</div><div class="owner-track"><div class="owner-fill" style="width:${o[1]/om*100}%"></div></div><div class="owner-count">${o[1]}</div></div>`).join('')||'<div class="empty">Sin responsables registrados.</div>'}
-function renderCalendar(){const y=CAL_DATE.getFullYear(),m=CAL_DATE.getMonth();$('#calendar-month').textContent=monthName(CAL_DATE);const first=new Date(y,m,1),start=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate(),prevDays=new Date(y,m,0).getDate();const all=enriched();let html='';for(let i=0;i<42;i++){let day,cy=y,cm=m,out=false;if(i<start){day=prevDays-start+i+1;cm=m-1;if(cm<0){cm=11;cy--}out=true}else if(i>=start+days){day=i-start-days+1;cm=m+1;if(cm>11){cm=0;cy++}out=true}else day=i-start+1;const date=`${cy}-${String(cm+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;const ev=all.filter(r=>r.fecha_limite===date);const td=TODAY(),isToday=td.getFullYear()===cy&&td.getMonth()===cm&&td.getDate()===day;html+=`<div class="calendar-day ${out?'outside':''} ${isToday?'today':''}"><div class="day-number">${day}</div><div class="day-events">${ev.slice(0,3).map(r=>`<button class="cal-event ${r.estado.key}" onclick="detail('${r.id}')" title="${esc(titleOf(r))}">${esc(r.nombre_reporte||titleOf(r))}</button>`).join('')}${ev.length>3?`<span class="cal-event plazo">+${ev.length-3}</span>`:''}</div></div>`}$('#calendar-grid').innerHTML=html;const monthEvents=all.filter(r=>{const d=parseDate(r.fecha_limite);return d&&d.getFullYear()===y&&d.getMonth()===m}).sort((a,b)=>a.fecha_limite.localeCompare(b.fecha_limite));$('#month-agenda').innerHTML=monthEvents.length?monthEvents.map(r=>{const d=parseDate(r.fecha_limite);return`<article class="agenda-item" onclick="detail('${r.id}')"><div class="agenda-date"><strong>${d.getDate()}</strong><span>${new Intl.DateTimeFormat('es-CO',{month:'short'}).format(d)}</span></div><div class="agenda-copy"><strong>${esc(titleOf(r))}</strong><small>${esc(r.responsable||'Sin responsable')} · <span class="badge ${r.estado.key}">${r.estado.label}</span></small></div></article>`}).join(''):`<div class="empty">No hay fechas límite registradas en este mes.</div>`}
-function fillFilters(){const owners=[...new Set(REPORTES.map(r=>r.responsable).filter(Boolean))].sort((a,b)=>a.localeCompare(b));$('#responsable').innerHTML='<option value="">Todos los responsables</option>'+owners.map(x=>`<option>${esc(x)}</option>`).join('');const acts=[...new Set(REPORTES.map(r=>r.tipo_actividad).filter(Boolean))].sort((a,b)=>a.localeCompare(b));$('#actividad').innerHTML='<option value="">Todas las actividades</option>'+acts.map(x=>`<option>${esc(x)}</option>`).join('')}
-function renderMatrix(){const q=($('#buscar')?.value||'').trim().toLowerCase(),st=$('#estado')?.value||'',owner=$('#responsable')?.value||'',act=$('#actividad')?.value||'';let rows=enriched().filter(r=>!q||[r.tema,r.tipo_actividad,r.responsable,r.plataforma,r.nombre_reporte,r.descripcion].join(' ').toLowerCase().includes(q)).filter(r=>!st||r.estado.key===st).filter(r=>!owner||r.responsable===owner).filter(r=>!act||r.tipo_actividad===act);if(quickAttention){rows=rows.filter(r=>['vencido','critico','seguimiento','sinfecha'].includes(r.estado.key)&&r.estado.key!=='cerrado');quickAttention=false}rows.sort((a,b)=>a.estado.rank-b.estado.rank||(a.dias??9999)-(b.dias??9999));$('#matrix-count').textContent=`${rows.length} de ${REPORTES.length} registros`;$('#tbody').innerHTML=rows.length?rows.map(r=>`<tr><td><strong>${esc(titleOf(r))}</strong><small>${esc(secondaryOf(r)||'—')}</small></td><td>${esc(safe(r.responsable))}</td><td>${fmtDate(r.fecha_limite)}</td><td><span class="badge ${r.estado.key}">${esc(r.estado.label)}</span></td><td>${dueText(r)}</td><td><button class="linkbtn" onclick="detail('${r.id}')">Detalle →</button></td></tr>`).join(''):`<tr><td colspan="6" class="empty">No hay registros con estos filtros.</td></tr>`}
-window.detail=(id)=>{const r=enriched().find(x=>x.id===id);if(!r)return;$('#drawer-body').innerHTML=`<div class="drawer-eyebrow">${esc(r.id)} · fila ${esc(r.fila_fuente)}</div><h2>${esc(titleOf(r))}</h2><span class="badge ${r.estado.key}">${esc(r.estado.label)}</span>${r.descripcion?`<div class="drawer-summary">${esc(r.descripcion)}</div>`:''}<dl><dt>Actividad</dt><dd>${esc(safe(r.tipo_actividad))}</dd><dt>Tipo de reporte</dt><dd>${esc(safe(r.tipo_reporte))}</dd><dt>Nombre</dt><dd>${esc(safe(r.nombre_reporte))}</dd><dt>Plataforma</dt><dd>${esc(safe(r.plataforma))}</dd><dt>Responsable</dt><dd>${esc(safe(r.responsable))}</dd><dt>Periodicidad</dt><dd>${esc(safe(r.periodicidad||r.periodicidad_reporte))}</dd><dt>Dependencia</dt><dd>${esc(safe(r.dependencia_solicitante))}</dd><dt>Fecha interna</dt><dd>${fmtDate(r.fecha_reporte_interno)}</dd><dt>Fecha límite</dt><dd>${fmtDate(r.fecha_limite)}</dd><dt>Entrega interna</dt><dd>${fmtDate(r.fecha_entrega_interna)}</dd><dt>Entrega solicitante</dt><dd>${fmtDate(r.fecha_entrega_solicitante)}</dd><dt>Estado matriz</dt><dd>${esc(safe(r.estado_fuente))}</dd><dt>Evidencia</dt><dd>${r.evidencia_disponible?'Registrada en la matriz':'No registrada'}</dd></dl>${r.observaciones?`<div class="drawer-section"><h3>Observaciones</h3><p>${esc(r.observaciones)}</p></div>`:''}`;$('#drawer').classList.add('open');$('#drawer-backdrop').classList.add('open');$('#drawer').setAttribute('aria-hidden','false')};
+
+function go(view){
+  $$('.nav-item').forEach(b=>{const on=b.dataset.view===view;b.classList.toggle('active',on);b.toggleAttribute('aria-current',on)});
+  $$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${view}`));
+  const copy={
+    resumen:['Resumen de seguimiento','Prioridades, instrumentos y próximos compromisos.'],
+    calendario:['Calendario de compromisos','Vencimientos por instrumento, acción y responsable.'],
+    matriz:['Matriz de seguimiento','Consulta el instrumento, la acción y el detalle operativo de cada reporte.']
+  }[view];
+  $('#page-title').textContent=copy[0];
+  $('#page-subtitle').textContent=copy[1];
+  history.replaceState(null,'',`#${view}`);
+  $('#sidebar').classList.remove('open');
+  if(view==='calendario')renderCalendar();
+  if(view==='matriz')renderMatrix();
+}
+
+function renderSummary(){
+  const all=enriched();
+  const open=all.filter(r=>r.estado.key!=='cerrado');
+  const overdue=all.filter(r=>r.estado.key==='vencido');
+  const next7=all.filter(r=>r.estado.key!=='cerrado'&&r.dias!==null&&r.dias>=0&&r.dias<=7);
+  const upcoming=all.filter(r=>r.dias!==null&&r.dias>=0&&r.dias<=30&&r.estado.key!=='cerrado');
+  const closed=all.filter(r=>r.estado.key==='cerrado');
+  const rate=all.length?Math.round(closed.length/all.length*100):0;
+  const kpis=[
+    ['Vencidos',overdue.length,'Requieren gestión inmediata','red'],
+    ['Próximos 7 días',next7.length,'Compromisos por monitorear','amber'],
+    ['Cumplimiento',`${rate}%`,`${closed.length} de ${all.length} entregados`,'green'],
+    ['Abiertos',open.length,'Reportes aún en gestión','blue']
+  ];
+  $('#summary-kpis').innerHTML=kpis.map(k=>`<article class="kpi-card"><span class="kpi-accent ${k[3]}"></span><span class="kpi-label">${k[0]}</span><div class="kpi-value">${k[1]}</div><div class="kpi-note">${k[2]}</div></article>`).join('');
+
+  const priority=open.filter(r=>['vencido','critico','seguimiento','sinfecha'].includes(r.estado.key)).sort((a,b)=>a.estado.rank-b.estado.rank||(a.dias??9999)-(b.dias??9999)).slice(0,6);
+  $('#priority-alerts').innerHTML=priority.length?priority.map(r=>`<article class="alert-item" onclick="detail('${r.id}')"><div class="alert-marker ${r.estado.key}"></div><div class="alert-copy"><strong>${esc(titleOf(r))}</strong><small>${esc(instrumentAction(r))} · ${esc(r.responsable||'Sin responsable')}</small></div><div class="alert-side"><strong>${esc(r.estado.label)}</strong><small>${r.fecha_limite?fmtDate(r.fecha_limite,{day:'2-digit',month:'short'}):'Sin fecha límite'}</small></div></article>`).join(''):`<div class="empty">No hay alertas prioritarias.</div>`;
+
+  const next=upcoming.sort((a,b)=>a.dias-b.dias).slice(0,6);
+  $('#upcoming-list').innerHTML=next.length?next.map(r=>{const d=parseDate(r.fecha_limite);return`<div class="timeline-item" onclick="detail('${r.id}')"><div class="date-chip"><strong>${d.getDate()}</strong><span>${new Intl.DateTimeFormat('es-CO',{month:'short'}).format(d)}</span></div><div class="timeline-copy"><strong>${esc(instrumentAction(r))}</strong><small>${esc(titleOf(r))} · ${dueText(r)}</small></div></div>`}).join(''):`<div class="empty">Sin vencimientos en los próximos 30 días.</div>`;
+
+  const statuses=[['Entregados','cerrado'],['En plazo','plazo'],['Seguimiento','seguimiento'],['Críticos','critico'],['Vencidos','vencido'],['Sin fecha','sinfecha']].map(([label,key])=>[label,key,all.filter(r=>r.estado.key===key).length]);
+  const max=Math.max(...statuses.map(x=>x[2]),1);
+  $('#status-breakdown').innerHTML=statuses.map(s=>`<div class="status-row"><span>${s[0]}</span><div class="status-track"><div class="status-fill" style="width:${s[2]/max*100}%"></div></div><strong>${s[2]}</strong></div>`).join('');
+
+  const owners=[...new Set(all.map(r=>r.responsable).filter(Boolean))].map(o=>[o,all.filter(r=>r.responsable===o&&r.estado.key!=='cerrado').length,all.filter(r=>r.responsable===o).length]).sort((a,b)=>b[1]-a[1]||b[2]-a[2]).slice(0,8);
+  const om=Math.max(...owners.map(x=>x[1]),1);
+  $('#owner-load').innerHTML=owners.map(o=>`<div class="owner-row"><div class="owner-name" title="${esc(o[0])}">${esc(o[0])}</div><div class="owner-track"><div class="owner-fill" style="width:${o[1]/om*100}%"></div></div><div class="owner-count">${o[1]}</div></div>`).join('')||'<div class="empty">Sin responsables registrados.</div>';
+}
+
+function renderCalendar(){
+  const y=CAL_DATE.getFullYear(),m=CAL_DATE.getMonth();
+  $('#calendar-month').textContent=monthName(CAL_DATE);
+  const first=new Date(y,m,1),start=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate(),prevDays=new Date(y,m,0).getDate();
+  const all=enriched();
+  let html='';
+  for(let i=0;i<42;i++){
+    let day,cy=y,cm=m,out=false;
+    if(i<start){day=prevDays-start+i+1;cm=m-1;if(cm<0){cm=11;cy--}out=true}
+    else if(i>=start+days){day=i-start-days+1;cm=m+1;if(cm>11){cm=0;cy++}out=true}
+    else day=i-start+1;
+    const date=`${cy}-${String(cm+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const ev=all.filter(r=>r.fecha_limite===date).sort((a,b)=>a.estado.rank-b.estado.rank);
+    const td=TODAY(),isToday=td.getFullYear()===cy&&td.getMonth()===cm&&td.getDate()===day;
+    html+=`<div class="calendar-day ${out?'outside':''} ${isToday?'today':''}"><div class="day-number">${day}</div><div class="day-events">${ev.slice(0,3).map(r=>`<button class="cal-event ${r.estado.key}" onclick="detail('${r.id}')" title="${esc(titleOf(r))} · ${esc(instrumentAction(r))}">${esc(calendarLabel(r))}</button>`).join('')}${ev.length>3?`<span class="cal-event plazo">+${ev.length-3} más</span>`:''}</div></div>`;
+  }
+  $('#calendar-grid').innerHTML=html;
+
+  const monthEvents=all.filter(r=>{const d=parseDate(r.fecha_limite);return d&&d.getFullYear()===y&&d.getMonth()===m}).sort((a,b)=>a.fecha_limite.localeCompare(b.fecha_limite)||a.estado.rank-b.estado.rank);
+  $('#month-agenda').innerHTML=monthEvents.length?monthEvents.map(r=>{const d=parseDate(r.fecha_limite);return`<article class="agenda-item" onclick="detail('${r.id}')"><div class="agenda-date"><strong>${d.getDate()}</strong><span>${new Intl.DateTimeFormat('es-CO',{month:'short'}).format(d)}</span></div><div class="agenda-copy"><strong>${esc(instrumentAction(r))}</strong><small>${esc(titleOf(r))} · ${esc(r.responsable||'Sin responsable')} · <span class="badge ${r.estado.key}">${esc(r.estado.label)}</span></small></div></article>`}).join(''):`<div class="empty">No hay fechas límite registradas en este mes.</div>`;
+}
+
+function fillFilters(){
+  const owners=[...new Set(REPORTES.map(r=>r.responsable).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  $('#responsable').innerHTML='<option value="">Todos los responsables</option>'+owners.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  const instruments=[...new Set(REPORTES.map(instrumentOf).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  $('#instrumento').innerHTML='<option value="">Todos los instrumentos</option>'+instruments.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+}
+
+function renderMatrix(){
+  const q=($('#buscar')?.value||'').trim().toLowerCase();
+  const st=$('#estado')?.value||'';
+  const owner=$('#responsable')?.value||'';
+  const instrument=$('#instrumento')?.value||'';
+  let rows=enriched().filter(r=>!q||[r.tema,r.instrumento,r.accion,r.responsable,r.plataforma,r.nombre_reporte,r.descripcion,r.tipo_reporte].join(' ').toLowerCase().includes(q)).filter(r=>!st||r.estado.key===st).filter(r=>!owner||r.responsable===owner).filter(r=>!instrument||r.instrumento===instrument);
+  if(quickAttention){rows=rows.filter(r=>['vencido','critico','seguimiento','sinfecha'].includes(r.estado.key)&&r.estado.key!=='cerrado');quickAttention=false}
+  rows.sort((a,b)=>a.estado.rank-b.estado.rank||(a.dias??9999)-(b.dias??9999));
+  $('#matrix-count').textContent=`${rows.length} de ${REPORTES.length} registros`;
+  $('#tbody').innerHTML=rows.length?rows.map(r=>`<tr><td><strong>${esc(titleOf(r))}</strong><small>${esc([r.tipo_reporte,r.plataforma].filter(Boolean).join(' · ')||'—')}</small></td><td><strong>${esc(r.instrumento)}</strong></td><td>${esc(r.accion||'—')}</td><td>${esc(safe(r.responsable))}</td><td>${fmtDate(r.fecha_limite)}</td><td><span class="badge ${r.estado.key}">${esc(r.estado.label)}</span></td><td>${dueText(r)}</td><td><button class="linkbtn" onclick="detail('${r.id}')">Detalle →</button></td></tr>`).join(''):`<tr><td colspan="8" class="empty">No hay registros con estos filtros.</td></tr>`;
+}
+
+window.detail=(id)=>{
+  const r=enriched().find(x=>x.id===id);if(!r)return;
+  const evidence=evidenceHref(r);
+  const evidenceHtml=evidence?`<a class="evidence-link" href="${esc(evidence)}" target="_blank" rel="noopener noreferrer">Abrir evidencia ↗</a>`:(r.evidencia_disponible?'Registrada en la matriz · enlace pendiente de sincronización':'No registrada');
+  const actionDesc=actionDescriptionOf(r);
+  $('#drawer-body').innerHTML=`<div class="drawer-eyebrow">${esc(r.id)} · fila ${esc(r.fila_fuente)}</div><h2>${esc(titleOf(r))}</h2><span class="badge ${r.estado.key}">${esc(r.estado.label)}</span><div class="drawer-summary"><strong>${esc(r.instrumento)}</strong>${r.accion?` · Acción ${esc(r.accion)}`:''}${actionDesc?`<br><span>${esc(actionDesc)}</span>`:''}</div><dl><dt>Instrumento</dt><dd>${esc(r.instrumento)}</dd><dt>Acción / identificador</dt><dd>${esc(r.accion||'—')}</dd><dt>Tipo de reporte</dt><dd>${esc(safe(r.tipo_reporte))}</dd><dt>Plataforma</dt><dd>${esc(safe(r.plataforma))}</dd><dt>Responsable</dt><dd>${esc(safe(r.responsable))}</dd><dt>Periodicidad</dt><dd>${esc(safe(r.periodicidad||r.periodicidad_reporte))}</dd><dt>Dependencia</dt><dd>${esc(safe(r.dependencia_solicitante))}</dd><dt>Fecha interna</dt><dd>${fmtDate(r.fecha_reporte_interno)}</dd><dt>Fecha límite</dt><dd>${fmtDate(r.fecha_limite)}</dd><dt>Entrega interna</dt><dd>${fmtDate(r.fecha_entrega_interna)}</dd><dt>Entrega solicitante</dt><dd>${fmtDate(r.fecha_entrega_solicitante)}</dd><dt>Estado matriz</dt><dd>${esc(safe(r.estado_fuente))}</dd><dt>Evidencia</dt><dd>${evidenceHtml}</dd></dl>${r.observaciones?`<div class="drawer-section"><h3>Observaciones</h3><p>${esc(r.observaciones)}</p></div>`:''}`;
+  $('#drawer').classList.add('open');
+  $('#drawer-backdrop').classList.add('open');
+  $('#drawer').setAttribute('aria-hidden','false');
+};
+
 function closeDrawer(){$('#drawer').classList.remove('open');$('#drawer-backdrop').classList.remove('open');$('#drawer').setAttribute('aria-hidden','true')}
-async function init(){const res=await fetch('./data/reportes.json',{cache:'no-store'});if(!res.ok)throw new Error(`HTTP ${res.status}`);REPORTES=await res.json();CAL_DATE=new Date();$('#updated-at').textContent=new Intl.DateTimeFormat('es-CO',{day:'2-digit',month:'short',year:'numeric'}).format(new Date());fillFilters();renderSummary();renderMatrix();renderCalendar();$$('.nav-item').forEach(b=>b.addEventListener('click',()=>go(b.dataset.view)));$$('[data-go]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.filter==='attention')quickAttention=true;go(b.dataset.go)}));['buscar','estado','responsable','actividad'].forEach(id=>$('#'+id).addEventListener(id==='buscar'?'input':'change',renderMatrix));$('#clear-filters').addEventListener('click',()=>{$('#buscar').value='';$('#estado').value='';$('#responsable').value='';$('#actividad').value='';renderMatrix()});$('#prev-month').onclick=()=>{CAL_DATE=new Date(CAL_DATE.getFullYear(),CAL_DATE.getMonth()-1,1);renderCalendar()};$('#next-month').onclick=()=>{CAL_DATE=new Date(CAL_DATE.getFullYear(),CAL_DATE.getMonth()+1,1);renderCalendar()};$('#today-month').onclick=()=>{CAL_DATE=new Date();renderCalendar()};$('#close').onclick=closeDrawer;$('#drawer-backdrop').onclick=closeDrawer;$('#mobile-menu').onclick=()=>$('#sidebar').classList.toggle('open');document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();$('#sidebar').classList.remove('open')}});const initial=['resumen','calendario','matriz'].includes(location.hash.slice(1))?location.hash.slice(1):'resumen';go(initial)}
+
+async function init(){
+  const res=await fetch('./data/reportes.json',{cache:'no-store'});if(!res.ok)throw new Error(`HTTP ${res.status}`);
+  REPORTES=await res.json();
+  CAL_DATE=new Date();
+  $('#updated-at').textContent=new Intl.DateTimeFormat('es-CO',{day:'2-digit',month:'short',year:'numeric'}).format(new Date());
+  fillFilters();renderSummary();renderMatrix();renderCalendar();
+  $$('.nav-item').forEach(b=>b.addEventListener('click',()=>go(b.dataset.view)));
+  $$('[data-go]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.filter==='attention')quickAttention=true;go(b.dataset.go)}));
+  ['buscar','estado','responsable','instrumento'].forEach(id=>$('#'+id).addEventListener(id==='buscar'?'input':'change',renderMatrix));
+  $('#clear-filters').addEventListener('click',()=>{$('#buscar').value='';$('#estado').value='';$('#responsable').value='';$('#instrumento').value='';renderMatrix()});
+  $('#prev-month').onclick=()=>{CAL_DATE=new Date(CAL_DATE.getFullYear(),CAL_DATE.getMonth()-1,1);renderCalendar()};
+  $('#next-month').onclick=()=>{CAL_DATE=new Date(CAL_DATE.getFullYear(),CAL_DATE.getMonth()+1,1);renderCalendar()};
+  $('#today-month').onclick=()=>{CAL_DATE=new Date();renderCalendar()};
+  $('#close').onclick=closeDrawer;$('#drawer-backdrop').onclick=closeDrawer;
+  $('#mobile-menu').onclick=()=>$('#sidebar').classList.toggle('open');
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();$('#sidebar').classList.remove('open')}});
+  const initial=['resumen','calendario','matriz'].includes(location.hash.slice(1))?location.hash.slice(1):'resumen';go(initial);
+}
+
 init().catch(err=>{$('#priority-alerts').innerHTML=`<div class="empty">No fue posible cargar los datos: ${esc(err.message)}</div>`;console.error(err)});
