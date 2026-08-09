@@ -21,6 +21,7 @@
     .sidebar-reveal:hover{transform:translate3d(2px,-50%,0);background:rgba(255,255,255,.88)}
     .sidebar-overlay-backdrop{display:none;position:fixed;inset:0;z-index:39;background:rgba(15,29,40,.10);opacity:0;transition:opacity 160ms ease}
     @media(min-width:901px){
+      .sidebar>.brand{margin-top:38px}
       body.sidebar-collapsed .app-shell{display:block!important;max-width:none!important;width:100%!important;min-height:100vh}
       body.sidebar-collapsed .main{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding-left:clamp(28px,3vw,52px);padding-right:clamp(28px,3vw,52px)}
       body.sidebar-collapsed .sidebar{position:fixed!important;left:0;top:0;width:214px;height:100vh;transform:translate3d(-104%,0,0);transition:transform 180ms cubic-bezier(.22,1,.36,1);box-shadow:14px 0 34px rgba(11,30,45,.12);z-index:45;will-change:transform;contain:layout paint}
