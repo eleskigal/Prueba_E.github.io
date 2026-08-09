@@ -22,11 +22,12 @@ jobs:
           for id in view-resumen view-calendario view-matriz summary-kpis calendar-grid month-agenda buscar estado responsable instrumento tbody drawer; do
             grep -q "id=\"$id\"" index.html || { echo "Missing DOM id: $id"; exit 1; }
           done
-          grep -q "dashboard-v5.css" index.html
+          grep -q "./css/app.css" index.html
           grep -q "./js/app.js" index.html
-      - name: Ensure obsolete version pages are absent
+      - name: Ensure obsolete prototype assets are absent
         shell: bash
         run: |
           test ! -e v2.html
           test ! -e v5.html
           test ! -e css/dashboard.css
+          test ! -e css/dashboard-v5.css
