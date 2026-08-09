@@ -26,14 +26,15 @@ jobs:
           done
           grep -q "./css/app.css" index.html
           grep -q "./css/summary.css" index.html
+          grep -q "./css/glass.css" index.html
           grep -q "xlsx.full.min.js" index.html
           grep -q "./js/app.js" index.html
           grep -q "./js/export.js" index.html
           grep -q 'data-export="xlsx"' index.html
           grep -q 'data-export="pdf"' index.html
           grep -q 'data-export="csv"' index.html
-          grep -q '@import url("./glass.css")' css/summary.css
           test -s css/glass.css
+          test -s js/export.js
       - name: Ensure obsolete prototype assets are absent
         shell: bash
         run: |
