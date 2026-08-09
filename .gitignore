@@ -1,0 +1,9 @@
+# La matriz maestra permanece local y no debe publicarse en el repositorio público.
+input/*.xlsx
+input/*.xls
+~$*.xlsx
+
+# Python
+__pycache__/
+*.pyc
+.venv/
